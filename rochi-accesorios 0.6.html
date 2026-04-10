@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Rochi Accesorios – Tu destino de belleza, moda y regalería. Maquillaje, labiales, ropa femenina, tazas sublimadas, creaciones en madera y más.">
+<title>Rochi Accesorios – Belleza, Moda & Regalería</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Josefin+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--pink-deep:#c8748a;--pink-mid:#e8a0b0;--pink-light:#f5d0da;--pink-pale:#fdf0f3;--pink-blush:#fce8ed;--cream:#fdf8f5;--black:#1a1014;--charcoal:#2d2028;--gray:#6b5c62;--gray-light:#c9b8be;--white:#ffffff;--pastel-yellow:#fff3cd;--pastel-green:#d4edda;--font-display:'Playfair Display',serif;--font-body:'Cormorant Garamond',serif;--font-ui:'Josefin Sans',sans-serif;--shadow-soft:0 4px 24px rgba(200,116,138,0.12);--shadow-card:0 2px 16px rgba(45,32,40,0.08);--transition:all 0.3s cubic-bezier(0.25,0.46,0.45,0.94)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--cream);color:var(--charcoal);font-size:18px;line-height:1.7;overflow-x:hidden}
+.hidden{display:none!important}
+.page{display:none;animation:pageIn 0.4s ease}
+.page.active{display:block}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:var(--font-ui);border:none}
+@keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.section-tag{font-family:var(--font-ui);font-size:0.68rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--pink-deep);display:inline-block;margin-bottom:0.5rem}
+/* ANNOUNCEMENT */
+.ann-bar{background:var(--black);color:var(--pink-light);text-align:center;padding:9px 1rem;font-family:var(--font-ui);font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase}
+.ann-bar span{color:var(--pink-mid);margin:0 0.5rem}
+/* HEADER */
+header{background:var(--white);border-bottom:1px solid var(--pink-light);position:sticky;top:0;z-index:1000;box-shadow:0 2px 20px rgba(200,116,138,0.08)}
+.header-inner{max-width:1280px;margin:0 auto;padding:0 2rem;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1rem;height:74px}
+.logo{grid-column:2;text-align:center;cursor:pointer}
+.logo-text{font-family:var(--font-display);font-size:1.65rem;font-weight:700;color:var(--black);letter-spacing:0.05em;line-height:1.1}
+.logo-sub{font-family:var(--font-ui);font-size:0.6rem;letter-spacing:0.35em;text-transform:uppercase;color:var(--pink-deep)}
+.nav-left,.nav-right{display:flex;align-items:center;gap:0.2rem}
+.nav-right{justify-content:flex-end}
+nav a,.nav-btn{font-family:var(--font-ui);font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--charcoal);padding:0.5rem 0.75rem;background:none;transition:var(--transition);position:relative;white-space:nowrap}
+nav a::after{content:'';position:absolute;bottom:2px;left:50%;width:0;height:1px;background:var(--pink-deep);transition:var(--transition);transform:translateX(-50%)}
+nav a:hover::after,nav a.active::after{width:70%}
+nav a:hover,nav a.active{color:var(--pink-deep)}
+.nav-icon-btn{background:none;border:none;color:var(--charcoal);font-size:1.15rem;padding:0.5rem;transition:var(--transition);display:flex;align-items:center;position:relative}
+.nav-icon-btn:hover{color:var(--pink-deep)}
+.cart-badge{position:absolute;top:2px;right:2px;background:var(--pink-deep);color:white;border-radius:50%;width:16px;height:16px;font-size:0.62rem;display:none;align-items:center;justify-content:center;font-family:var(--font-ui);font-weight:600}
+.user-chip{font-family:var(--font-ui);font-size:0.62rem;letter-spacing:0.1em;color:var(--pink-deep);background:var(--pink-pale);border:1px solid var(--pink-light);padding:0.25rem 0.6rem;display:none;align-items:center;gap:0.3rem;white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.user-chip.visible{display:flex}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;padding:0.5rem;cursor:pointer}
+.hamburger span{display:block;width:22px;height:2px;background:var(--charcoal)}
+/* MOBILE NAV */
+.mobile-nav{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--white);z-index:2000;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem}
+.mobile-nav.open{display:flex}
+.mobile-nav a{font-family:var(--font-display);font-size:2rem;color:var(--charcoal);transition:var(--transition)}
+.mobile-nav a:hover{color:var(--pink-deep)}
+.mobile-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:none;font-size:1.8rem;color:var(--charcoal);cursor:pointer}
+/* SEARCH */
+.search-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(253,240,243,0.97);z-index:3000;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem}
+.search-overlay.open{display:flex}
+.search-overlay input{width:min(560px,90vw);padding:1rem 1.5rem;font-family:var(--font-display);font-size:1.6rem;border:none;border-bottom:2px solid var(--pink-deep);background:transparent;text-align:center;outline:none;color:var(--charcoal)}
+.search-close{position:absolute;top:1.5rem;right:1.5rem;background:none;border:none;font-size:1.8rem;cursor:pointer;color:var(--gray)}
+.search-hint{font-family:var(--font-ui);font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gray)}
+/* AUTH MODAL */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(26,16,20,0.5);z-index:5000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--white);width:min(440px,95vw);padding:3rem;position:relative;animation:modalIn 0.3s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--gray)}
+.modal-title{font-family:var(--font-display);font-size:1.8rem;font-weight:700;margin-bottom:0.5rem;text-align:center}
+.modal-subtitle{font-size:0.9rem;color:var(--gray);text-align:center;margin-bottom:2rem}
+.modal-tabs{display:flex;margin-bottom:2rem;border-bottom:1px solid var(--pink-light)}
+.modal-tab{flex:1;padding:0.8rem;background:none;border:none;font-family:var(--font-ui);font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:var(--transition)}
+.modal-tab.active{color:var(--pink-deep);border-bottom-color:var(--pink-deep)}
+.modal-form{display:none}
+.modal-form.active{display:block}
+.modal-msg{font-family:var(--font-ui);font-size:0.75rem;padding:0.6rem 0.8rem;margin-bottom:0.8rem;display:none}
+.modal-msg.show{display:block}
+.modal-msg.error{background:#fde8ed;color:#c04a6a}
+.modal-msg.success{background:var(--pastel-green);color:#2d6a4f}
+/* HERO */
+.hero{min-height:92vh;display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
+.hero-left{background:var(--pink-blush);display:flex;flex-direction:column;justify-content:center;padding:6rem 5rem 6rem 8%;position:relative;overflow:hidden}
+.hero-left::before{content:'';position:absolute;top:-80px;left:-80px;width:320px;height:320px;background:radial-gradient(circle,rgba(200,116,138,0.18) 0%,transparent 70%);border-radius:50%}
+.hero-left::after{content:'✿';position:absolute;bottom:10%;right:-20px;font-size:180px;color:rgba(200,116,138,0.07);transform:rotate(-15deg)}
+.hero-eyebrow{font-family:var(--font-ui);font-size:0.7rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--pink-deep);margin-bottom:1.2rem;display:flex;align-items:center;gap:0.8rem}
+.hero-eyebrow::before{content:'';width:32px;height:1px;background:var(--pink-deep)}
+.hero-title{font-family:var(--font-display);font-size:clamp(2.8rem,4.5vw,4.2rem);font-weight:700;line-height:1.1;color:var(--black);margin-bottom:1.5rem}
+.hero-title em{font-style:italic;color:var(--pink-deep)}
+.hero-desc{font-size:1.1rem;color:var(--gray);max-width:400px;margin-bottom:2.5rem;line-height:1.8}
+.hero-ctas{display:flex;gap:1rem;flex-wrap:wrap}
+.btn-primary{background:var(--black);color:var(--white);padding:0.85rem 2.2rem;font-family:var(--font-ui);font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;transition:var(--transition);border:2px solid var(--black)}
+.btn-primary:hover{background:var(--pink-deep);border-color:var(--pink-deep);transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,116,138,0.3)}
+.btn-outline{background:transparent;color:var(--black);padding:0.85rem 2.2rem;font-family:var(--font-ui);font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;border:2px solid var(--black);transition:var(--transition)}
+.btn-outline:hover{background:var(--black);color:var(--white);transform:translateY(-2px)}
+.hero-right{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--pink-light) 0%,var(--pink-mid) 40%,var(--pink-deep) 100%);display:flex;align-items:center;justify-content:center}
+.hero-float-card{position:absolute;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);padding:1.2rem 1.8rem;border-left:3px solid var(--pink-deep);box-shadow:0 8px 32px rgba(45,32,40,0.15);animation:floatCard 4s ease-in-out infinite}
+.hero-float-card:nth-child(1){top:18%;left:8%;animation-delay:0s}
+.hero-float-card:nth-child(2){bottom:22%;right:8%;animation-delay:1.5s}
+.hero-float-card:nth-child(3){top:50%;left:5%;animation-delay:0.8s;transform:translateY(-50%)}
+@keyframes floatCard{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.float-card-label{font-family:var(--font-ui);font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--pink-deep);margin-bottom:0.2rem}
+.float-card-value{font-family:var(--font-display);font-size:1rem;font-weight:600;color:var(--black)}
+.hero-center-icon{font-size:8rem;opacity:0.25;color:white;animation:spin-slow 20s linear infinite}
+@keyframes spin-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+/* CAT STRIP */
+.category-strip{background:var(--white);border-top:1px solid var(--pink-light);border-bottom:1px solid var(--pink-light);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.category-strip-inner{display:flex;max-width:1280px;margin:0 auto}
+.cat-btn{flex:1 0 auto;padding:1.1rem 1.8rem;font-family:var(--font-ui);font-size:0.68rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--gray);background:none;border:none;border-right:1px solid var(--pink-light);transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:0.4rem;white-space:nowrap;cursor:pointer}
+.cat-btn:last-child{border-right:none}
+.cat-btn .cat-icon{font-size:1.4rem}
+.cat-btn:hover,.cat-btn.active{background:var(--pink-pale);color:var(--pink-deep)}
+/* SECTIONS */
+.section{padding:6rem 2rem;max-width:1280px;margin:0 auto}
+.section-header{text-align:center;margin-bottom:3.5rem}
+.section-title{font-family:var(--font-display);font-size:clamp(2rem,3.5vw,3rem);font-weight:700;color:var(--black);line-height:1.15}
+.section-subtitle{color:var(--gray);font-size:1rem;margin-top:0.8rem;max-width:520px;margin-left:auto;margin-right:auto}
+/* PRODUCT */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.5rem}
+.product-card{background:var(--white);border:1px solid var(--pink-light);overflow:hidden;transition:var(--transition);position:relative}
+.product-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(200,116,138,0.18);border-color:var(--pink-mid)}
+.product-img-wrap{aspect-ratio:3/4;overflow:hidden;background:var(--pink-pale);position:relative;display:flex;align-items:center;justify-content:center}
+.product-emoji{font-size:4rem;transition:transform 0.4s ease}
+.product-card:hover .product-emoji{transform:scale(1.1)}
+.product-badge{position:absolute;top:0.75rem;left:0.75rem;background:var(--pink-deep);color:white;font-family:var(--font-ui);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.25rem 0.6rem}
+.product-badge.new{background:var(--black)}
+.product-badge.sale{background:#c04a6a}
+.product-wishlist{position:absolute;top:0.75rem;right:0.75rem;background:rgba(255,255,255,0.85);border:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:var(--transition);cursor:pointer}
+.product-wishlist:hover{background:var(--pink-deep);color:white}
+.product-info{padding:1.1rem}
+.product-category{font-family:var(--font-ui);font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--pink-deep);margin-bottom:0.3rem}
+.product-name{font-family:var(--font-display);font-size:1rem;font-weight:600;color:var(--black);margin-bottom:0.5rem;line-height:1.3}
+.product-price-wrap{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.9rem}
+.product-price{font-family:var(--font-ui);font-weight:600;font-size:1rem;color:var(--black)}
+.product-price-old{font-size:0.82rem;color:var(--gray-light);text-decoration:line-through}
+.btn-add-cart{width:100%;padding:0.7rem;background:var(--black);color:var(--white);font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;border:2px solid var(--black);transition:var(--transition);cursor:pointer}
+.btn-add-cart:hover,.btn-add-cart.in-cart{background:var(--pink-deep);border-color:var(--pink-deep)}
+/* MARQUEE */
+.marquee-wrap{background:var(--black);padding:1rem 0;overflow:hidden}
+.marquee-track{display:flex;animation:marquee 22s linear infinite;width:max-content}
+.marquee-item{font-family:var(--font-ui);font-size:0.72rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--pink-light);padding:0 2.5rem;white-space:nowrap;display:flex;align-items:center;gap:0.5rem}
+.marquee-item::after{content:'✿';color:var(--pink-deep)}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+/* VALUES */
+.values-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem}
+.value-card{background:var(--white);border:1px solid var(--pink-light);padding:2rem 1.5rem;text-align:center;transition:var(--transition)}
+.value-card:hover{border-color:var(--pink-mid);box-shadow:var(--shadow-soft);transform:translateY(-3px)}
+.value-icon{font-size:2rem;margin-bottom:0.8rem}
+.value-title{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:0.5rem;color:var(--black)}
+.value-desc{font-size:0.9rem;color:var(--gray)}
+/* ABOUT */
+.about-hero{background:var(--pink-blush);padding:7rem 2rem 5rem;text-align:center;position:relative;overflow:hidden}
+.about-hero::before{content:'✿ ✦ ✿';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28rem;color:rgba(200,116,138,0.04);white-space:nowrap;pointer-events:none}
+.about-hero-title{font-family:var(--font-display);font-size:clamp(3rem,6vw,5.5rem);font-weight:700;color:var(--black);line-height:1.05;margin-bottom:1.5rem}
+.about-hero-title em{font-style:italic;color:var(--pink-deep)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.about-img-placeholder{aspect-ratio:4/5;background:linear-gradient(135deg,var(--pink-blush),var(--pink-light),var(--pink-mid));display:flex;align-items:center;justify-content:center;font-size:6rem}
+.about-text .lead{font-family:var(--font-display);font-size:1.35rem;font-style:italic;color:var(--pink-deep);margin-bottom:1.5rem;line-height:1.5}
+.about-text p{margin-bottom:1rem;color:var(--gray)}
+/* PRODUCTS PAGE */
+.products-header{background:var(--pink-blush);padding:5rem 2rem 3rem;text-align:center}
+.products-controls{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;padding:1.2rem;background:var(--white);border:1px solid var(--pink-light)}
+.filter-tabs{display:flex;gap:0.5rem;flex-wrap:wrap}
+.filter-tab{background:none;border:1px solid var(--pink-light);padding:0.45rem 1.1rem;font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gray);transition:var(--transition);cursor:pointer}
+.filter-tab:hover,.filter-tab.active{background:var(--black);color:var(--white);border-color:var(--black)}
+.sort-select{font-family:var(--font-ui);font-size:0.68rem;letter-spacing:0.1em;border:1px solid var(--pink-light);padding:0.45rem 1rem;background:var(--white);color:var(--gray);outline:none;cursor:pointer}
+/* CART */
+.cart-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(26,16,20,0.4);z-index:4000}
+.cart-overlay.open{display:block}
+.cart-panel{position:fixed;top:0;right:-460px;width:460px;max-width:100vw;height:100%;background:var(--white);z-index:4001;display:flex;flex-direction:column;transition:right 0.4s cubic-bezier(0.25,0.46,0.45,0.94);box-shadow:-8px 0 40px rgba(45,32,40,0.12)}
+.cart-panel.open{right:0}
+.cart-header{padding:1.5rem;border-bottom:1px solid var(--pink-light);display:flex;align-items:center;justify-content:space-between}
+.cart-title{font-family:var(--font-display);font-size:1.4rem;font-weight:600}
+.cart-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--gray)}
+.cart-items{flex:1;overflow-y:auto;padding:1.5rem}
+.cart-empty{text-align:center;padding:3rem 1rem;color:var(--gray)}
+.cart-empty-icon{font-size:3rem;margin-bottom:1rem;opacity:0.4}
+.cart-item{display:grid;grid-template-columns:72px 1fr auto;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--pink-pale);align-items:start}
+.cart-item-img{width:72px;height:90px;background:var(--pink-pale);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0}
+.cart-item-name{font-family:var(--font-display);font-size:0.95rem;font-weight:600;margin-bottom:0.3rem;color:var(--black)}
+.cart-item-price{font-family:var(--font-ui);font-size:0.85rem;color:var(--pink-deep);font-weight:600}
+.cart-item-qty{display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem}
+.qty-btn{width:24px;height:24px;border:1px solid var(--pink-light);background:none;display:flex;align-items:center;justify-content:center;font-size:0.85rem;cursor:pointer;transition:var(--transition)}
+.qty-btn:hover{background:var(--black);color:white;border-color:var(--black)}
+.qty-num{font-family:var(--font-ui);font-size:0.85rem;min-width:20px;text-align:center}
+.cart-remove{background:none;border:none;color:var(--gray-light);cursor:pointer;font-size:0.9rem}
+.cart-remove:hover{color:#c04a6a}
+.cart-footer{padding:1.5rem;border-top:1px solid var(--pink-light)}
+.cart-total{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+.cart-total-label{font-family:var(--font-ui);font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gray)}
+.cart-total-value{font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--black)}
+.btn-checkout{width:100%;padding:1rem;background:var(--black);color:var(--white);font-family:var(--font-ui);font-size:0.72rem;letter-spacing:0.22em;text-transform:uppercase;border:none;transition:var(--transition);cursor:pointer}
+.btn-checkout:hover{background:var(--pink-deep)}
+/* CHECKOUT */
+.checkout-page{max-width:800px;margin:0 auto;padding:4rem 2rem}
+.checkout-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+.checkout-section-title{font-family:var(--font-ui);font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--pink-deep);margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--pink-light)}
+.form-group{margin-bottom:1.2rem}
+.form-label{display:block;font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gray);margin-bottom:0.4rem}
+.form-input{width:100%;padding:0.75rem 1rem;border:1px solid var(--pink-light);background:var(--white);font-family:var(--font-body);font-size:1rem;color:var(--charcoal);outline:none;transition:var(--transition)}
+.form-input:focus{border-color:var(--pink-deep);box-shadow:0 0 0 3px rgba(200,116,138,0.1)}
+.checkout-item-row{display:flex;align-items:center;gap:1rem;padding:0.8rem 0;border-bottom:1px solid var(--pink-pale)}
+.checkout-item-icon{font-size:1.8rem;width:40px;text-align:center}
+.checkout-item-name{flex:1;font-family:var(--font-display);font-size:1rem}
+.checkout-item-qty{font-family:var(--font-ui);font-size:0.75rem;color:var(--gray)}
+.checkout-item-price{font-family:var(--font-ui);font-weight:600;color:var(--black)}
+.checkout-total-row{display:flex;justify-content:space-between;padding:1.2rem 0;font-family:var(--font-display);font-size:1.3rem;font-weight:700;border-top:2px solid var(--black);margin-top:0.5rem}
+.btn-confirm{width:100%;padding:1.1rem;background:var(--black);color:white;font-family:var(--font-ui);font-size:0.72rem;letter-spacing:0.22em;text-transform:uppercase;border:none;margin-top:2rem;transition:var(--transition);cursor:pointer}
+.btn-confirm:hover{background:var(--pink-deep);box-shadow:0 8px 24px rgba(200,116,138,0.3)}
+.btn-confirm:disabled{background:var(--gray-light);cursor:not-allowed;box-shadow:none}
+.confirmation-success{text-align:center;padding:4rem 2rem}
+.success-icon{font-size:4rem;margin-bottom:1.5rem}
+.success-title{font-family:var(--font-display);font-size:2.2rem;font-weight:700;color:var(--black);margin-bottom:1rem}
+.success-text{color:var(--gray);max-width:400px;margin:0 auto 2rem}
+.order-number{display:inline-block;background:var(--pink-pale);border:1px solid var(--pink-light);padding:0.5rem 1.5rem;font-family:var(--font-ui);font-size:0.8rem;letter-spacing:0.15em;color:var(--pink-deep);margin-bottom:2rem}
+/* CONTACT */
+.contact-hero{background:var(--pink-blush);padding:5rem 2rem 3rem;text-align:center}
+.contact-grid{display:grid;grid-template-columns:1fr 1.4fr;gap:4rem;align-items:start}
+.contact-info-block{margin-bottom:2rem}
+.contact-info-label{font-family:var(--font-ui);font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--pink-deep);margin-bottom:0.4rem}
+.contact-info-value{font-family:var(--font-display);font-size:1.05rem;color:var(--black)}
+.social-links{display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:2rem}
+.social-link{display:flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;border:1px solid var(--pink-light);font-family:var(--font-ui);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray);transition:var(--transition);background:var(--white)}
+.social-link:hover{border-color:var(--pink-deep);color:var(--pink-deep);background:var(--pink-pale)}
+.contact-form{background:var(--white);padding:2.5rem;border:1px solid var(--pink-light)}
+.form-feedback{font-family:var(--font-ui);font-size:0.75rem;padding:0.8rem 1rem;margin-bottom:1rem;display:none}
+.form-feedback.show{display:block}
+.form-feedback.success{background:var(--pastel-green);color:#2d6a4f}
+.form-feedback.error{background:#fde8ed;color:#c04a6a}
+/* NEWSLETTER */
+.newsletter-section{background:var(--pink-deep);padding:4rem 2rem;text-align:center}
+.newsletter-title{font-family:var(--font-display);font-size:clamp(1.8rem,3vw,2.5rem);font-weight:700;color:var(--white);margin-bottom:0.8rem}
+.newsletter-subtitle{color:rgba(255,255,255,0.8);margin-bottom:2rem}
+.newsletter-form{display:flex;max-width:480px;margin:0 auto}
+.newsletter-input{flex:1;padding:0.9rem 1.2rem;border:none;font-family:var(--font-body);font-size:1rem;outline:none}
+.newsletter-btn{padding:0.9rem 1.5rem;background:var(--black);color:white;border:none;font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;transition:var(--transition);white-space:nowrap}
+.newsletter-btn:hover{background:var(--charcoal)}
+/* ADMIN */
+.admin-login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--black);padding:2rem}
+.admin-login-box{background:var(--white);padding:3rem;width:min(440px,100%);text-align:center}
+.admin-logo{font-family:var(--font-display);font-size:1.8rem;font-weight:700;margin-bottom:0.3rem}
+.admin-logo-sub{font-family:var(--font-ui);font-size:0.62rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--pink-deep);margin-bottom:2.5rem}
+.admin-dashboard{min-height:100vh;background:#f8f2f4}
+.admin-topbar{background:var(--black);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between}
+.admin-topbar-logo{font-family:var(--font-display);color:var(--white);font-size:1.1rem;font-weight:600}
+.admin-topbar-logo span{color:var(--pink-mid);font-style:italic}
+.admin-logout{background:none;border:1px solid rgba(255,255,255,0.2);color:var(--pink-light);padding:0.4rem 1rem;font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;transition:var(--transition);cursor:pointer}
+.admin-content{max-width:1280px;margin:0 auto;padding:2rem}
+.admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem}
+.admin-stat-card{background:var(--white);padding:1.5rem;border-left:4px solid var(--pink-deep);box-shadow:var(--shadow-card)}
+.admin-stat-label{font-family:var(--font-ui);font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gray);margin-bottom:0.5rem}
+.admin-stat-value{font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--black)}
+.admin-orders-title{font-family:var(--font-display);font-size:1.5rem;font-weight:600;color:var(--black);margin-bottom:1.2rem;display:flex;align-items:center;gap:1rem}
+.admin-refresh-btn{background:none;border:1px solid var(--pink-light);padding:0.35rem 0.8rem;font-family:var(--font-ui);font-size:0.62rem;letter-spacing:0.1em;color:var(--gray);cursor:pointer;transition:var(--transition)}
+.admin-refresh-btn:hover{border-color:var(--pink-deep);color:var(--pink-deep)}
+.admin-table-wrap{background:var(--white);box-shadow:var(--shadow-card);overflow-x:auto}
+.admin-table{width:100%;border-collapse:collapse;font-family:var(--font-ui);font-size:0.78rem}
+.admin-table th{background:var(--black);color:var(--pink-light);padding:0.9rem 1rem;text-align:left;letter-spacing:0.1em;text-transform:uppercase;font-size:0.62rem;white-space:nowrap}
+.admin-table td{padding:0.9rem 1rem;border-bottom:1px solid var(--pink-pale);color:var(--charcoal)}
+.admin-table tr:hover td{background:var(--pink-pale)}
+.order-status{display:inline-block;padding:0.2rem 0.6rem;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase}
+.status-pending{background:var(--pastel-yellow);color:#856404}
+.status-confirmed{background:var(--pastel-green);color:#2d6a4f}
+.admin-empty{text-align:center;padding:4rem 2rem;color:var(--gray)}
+.admin-empty-icon{font-size:3rem;opacity:0.3;margin-bottom:1rem}
+/* TOAST */
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--black);color:var(--white);padding:1rem 1.5rem;font-family:var(--font-ui);font-size:0.72rem;letter-spacing:0.1em;z-index:9999;transform:translateY(100px);opacity:0;transition:all 0.4s cubic-bezier(0.25,0.46,0.45,0.94);display:flex;align-items:center;gap:0.8rem;min-width:260px;border-left:3px solid var(--pink-deep)}
+.toast.show{transform:translateY(0);opacity:1}
+/* SPINNER */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* BACK TO TOP */
+.back-to-top{position:fixed;bottom:2rem;left:2rem;background:var(--pink-deep);color:white;width:40px;height:40px;border:none;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;opacity:0;transition:var(--transition);z-index:100}
+.back-to-top.visible{opacity:1}
+.back-to-top:hover{background:var(--black);transform:translateY(-2px)}
+/* RESPONSIVE */
+@media(max-width:1024px){.hero{grid-template-columns:1fr;min-height:auto}.hero-right{height:280px}.hero-left{padding:4rem 2rem 3rem}.about-grid,.contact-grid,.checkout-grid{grid-template-columns:1fr}}
+@media(max-width:768px){.header-inner{grid-template-columns:auto 1fr auto;height:64px}.logo{grid-column:2}.nav-left{display:none}.user-chip{display:none!important}.hamburger{display:flex}.product-grid{grid-template-columns:repeat(2,1fr);gap:0.8rem}}
+@media(max-width:480px){.hero-title{font-size:2.2rem}.hero-ctas{flex-direction:column}.hero-float-card{display:none}.newsletter-form{flex-direction:column}.cart-panel{width:100%}}
+</style>
+</head>
+<body>
+
+<div class="ann-bar"><span>✿</span>Envíos a todo el país<span>✿</span>Nuevas colecciones disponibles<span>✿</span>Creaciones personalizadas a pedido</div>
+
+<header>
+  <div class="header-inner">
+    <nav class="nav-left">
+      <a href="#" class="nav-btn active" onclick="showPage('home',this);return false">Inicio</a>
+      <a href="#" class="nav-btn" onclick="showPage('about',this);return false">Nosotras</a>
+      <a href="#" class="nav-btn" onclick="showPage('products',this);return false">Productos</a>
+    </nav>
+    <div class="logo" onclick="showPage('home',null)">
+      <div class="logo-text">Rochi <em style="font-style:italic">Accesorios</em></div>
+      <div class="logo-sub">Belleza · Moda · Regalería</div>
+    </div>
+    <div class="nav-right">
+      <a href="#" class="nav-btn" onclick="showPage('contact',this);return false">Contacto</a>
+      <span class="user-chip" id="userChip">👤 <span id="userChipName"></span></span>
+      <button class="nav-icon-btn" onclick="toggleSearch()" aria-label="Buscar">🔍</button>
+      <button class="nav-icon-btn" id="authBtn" onclick="handleAuthClick()" title="Mi cuenta">👤</button>
+      <button class="nav-icon-btn" onclick="openCart()" aria-label="Carrito">🛒<span class="cart-badge" id="cartBadge">0</span></button>
+      <button class="hamburger" onclick="openMobileNav()" aria-label="Menú"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav" id="mobileNav">
+  <button class="mobile-close" onclick="closeMobileNav()">✕</button>
+  <a href="#" onclick="showPage('home',null);closeMobileNav();return false">Inicio</a>
+  <div style="color:var(--pink-deep);font-size:1.4rem;letter-spacing:0.4em;opacity:0.6">✿</div>
+  <a href="#" onclick="showPage('about',null);closeMobileNav();return false">Nosotras</a>
+  <a href="#" onclick="showPage('products',null);closeMobileNav();return false">Productos</a>
+  <a href="#" onclick="showPage('contact',null);closeMobileNav();return false">Contacto</a>
+  <div style="color:var(--pink-deep);font-size:1.4rem;letter-spacing:0.4em;opacity:0.6">✿</div>
+  <a href="#" onclick="handleAuthClick();closeMobileNav();return false" id="mobileAuthLink" style="font-size:1.2rem;font-family:var(--font-ui);letter-spacing:0.15em">Mi Cuenta</a>
+</nav>
+
+<div class="search-overlay" id="searchOverlay">
+  <button class="search-close" onclick="toggleSearch()">✕</button>
+  <p class="search-hint">Buscar en Rochi Accesorios</p>
+  <input type="text" id="searchInput" placeholder="¿Qué estás buscando?" oninput="handleSearch(this.value)" autocomplete="off">
+  <div id="searchResults" style="max-width:560px;width:100%"></div>
+</div>
+
+<div class="modal-overlay" id="authModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeAuthModal()">✕</button>
+    <div class="modal-title">Mi Cuenta</div>
+    <div class="modal-subtitle">Iniciá sesión o creá tu cuenta</div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchAuthTab('login',this)">Iniciar Sesión</button>
+      <button class="modal-tab" onclick="switchAuthTab('register',this)">Registrarse</button>
+    </div>
+    <div class="modal-form active" id="loginForm">
+      <div class="modal-msg error" id="loginError"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="loginEmail" placeholder="tucuenta@email.com" onkeydown="if(event.key==='Enter')handleLogin()"></div>
+      <div class="form-group"><label class="form-label">Contraseña</label><input class="form-input" type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLogin()"></div>
+      <button class="btn-primary" id="loginBtn" style="width:100%;padding:1rem;border:none;cursor:pointer;margin-top:0.5rem" onclick="handleLogin()">Iniciar Sesión</button>
+    </div>
+    <div class="modal-form" id="registerForm">
+      <div class="modal-msg error" id="registerError"></div>
+      <div class="modal-msg success" id="registerSuccess"></div>
+      <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" type="text" id="regName" placeholder="Tu nombre"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="regEmail" placeholder="tucuenta@email.com"></div>
+      <div class="form-group"><label class="form-label">Contraseña</label><input class="form-input" type="password" id="regPass" placeholder="Mínimo 6 caracteres"></div>
+      <button class="btn-primary" id="registerBtn" style="width:100%;padding:1rem;border:none;cursor:pointer;margin-top:0.5rem" onclick="handleRegister()">Crear Cuenta</button>
+    </div>
+  </div>
+</div>
+
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<aside class="cart-panel" id="cartPanel">
+  <div class="cart-header"><div class="cart-title">🛒 Mi Carrito</div><button class="cart-close" onclick="closeCart()">✕</button></div>
+  <div class="cart-items" id="cartItemsEl"></div>
+  <div class="cart-footer" id="cartFooter" style="display:none">
+    <div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-value" id="cartTotalEl">$0</span></div>
+    <button class="btn-checkout" onclick="goToCheckout()">Confirmar Pedido →</button>
+  </div>
+</aside>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Nueva Colección 2025</div>
+      <h1 class="hero-title">Tu mundo de<br><em>belleza & estilo</em><br>en un solo lugar</h1>
+      <p class="hero-desc">Maquillaje, ropa femenina y regalería artesanal. Todo pensado para vos, con amor y dedicación.</p>
+      <div class="hero-ctas">
+        <button class="btn-primary" onclick="showPage('products',null)">Ver Colección</button>
+        <button class="btn-outline" onclick="showPage('about',null)">Nuestra Historia</button>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center">
+        <div class="hero-center-icon">✿</div>
+        <div class="hero-float-card"><div class="float-card-label">Tendencia</div><div class="float-card-value">💄 Labiales Mate</div></div>
+        <div class="hero-float-card"><div class="float-card-label">Regalería</div><div class="float-card-value">🪵 Artesanías Láser</div></div>
+        <div class="hero-float-card"><div class="float-card-label">Bestseller</div><div class="float-card-value">✨ Kits de Belleza</div></div>
+      </div>
+    </div>
+  </section>
+  <div class="category-strip">
+    <div class="category-strip-inner">
+      <button class="cat-btn" onclick="filterAndGoProducts('all')"><span class="cat-icon">✨</span>Todo</button>
+      <button class="cat-btn" onclick="filterAndGoProducts('makeup')"><span class="cat-icon">💄</span>Maquillaje</button>
+      <button class="cat-btn" onclick="filterAndGoProducts('nails')"><span class="cat-icon">💅</span>Uñas & Cejas</button>
+      <button class="cat-btn" onclick="filterAndGoProducts('skincare')"><span class="cat-icon">🧴</span>Estética Facial</button>
+      <button class="cat-btn" onclick="filterAndGoProducts('clothes')"><span class="cat-icon">👗</span>Ropa Mujer</button>
+      <button class="cat-btn" onclick="filterAndGoProducts('gifts')"><span class="cat-icon">🎁</span>Regalería</button>
+    </div>
+  </div>
+  <section class="section">
+    <div class="section-header">
+      <span class="section-tag">Lo más elegido</span>
+      <h2 class="section-title">Productos Destacados</h2>
+      <p class="section-subtitle">Descubrí las piezas favoritas de nuestra comunidad.</p>
+    </div>
+    <div class="product-grid" id="featuredGrid"></div>
+    <div style="text-align:center;margin-top:3rem"><button class="btn-outline" onclick="showPage('products',null)">Ver todos los productos →</button></div>
+  </section>
+  <div class="marquee-wrap" aria-hidden="true">
+    <div class="marquee-track">
+      <span class="marquee-item">Belleza</span><span class="marquee-item">Maquillaje Profesional</span><span class="marquee-item">Ropa Femenina</span><span class="marquee-item">Regalería Artesanal</span><span class="marquee-item">Tazas Sublimadas</span><span class="marquee-item">Madera Láser</span><span class="marquee-item">Labiales Mate</span><span class="marquee-item">Kits de Uñas</span><span class="marquee-item">Remeras Personalizadas</span><span class="marquee-item">Cuidado de Cejas</span>
+      <span class="marquee-item">Belleza</span><span class="marquee-item">Maquillaje Profesional</span><span class="marquee-item">Ropa Femenina</span><span class="marquee-item">Regalería Artesanal</span><span class="marquee-item">Tazas Sublimadas</span><span class="marquee-item">Madera Láser</span><span class="marquee-item">Labiales Mate</span><span class="marquee-item">Kits de Uñas</span><span class="marquee-item">Remeras Personalizadas</span><span class="marquee-item">Cuidado de Cejas</span>
+    </div>
+  </div>
+  <section style="padding:5rem 2rem;background:var(--white)">
+    <div style="max-width:1280px;margin:0 auto">
+      <div class="values-grid">
+        <div class="value-card"><div class="value-icon">💌</div><div class="value-title">Envíos a todo el país</div><div class="value-desc">Despachamos tu pedido con cuidado, a cualquier rincón de Argentina.</div></div>
+        <div class="value-card"><div class="value-icon">🎨</div><div class="value-title">Creaciones personalizadas</div><div class="value-desc">Tazas, madera y remeras con tu diseño. El regalo perfecto para cada ocasión.</div></div>
+        <div class="value-card"><div class="value-icon">✅</div><div class="value-title">Calidad garantizada</div><div class="value-desc">Solo seleccionamos productos de calidad comprobada para tu satisfacción.</div></div>
+        <div class="value-card"><div class="value-icon">💬</div><div class="value-title">Atención personalizada</div><div class="value-desc">Estamos para ayudarte. ¡Escribinos cuando quieras!</div></div>
+      </div>
+    </div>
+  </section>
+  <div class="newsletter-section">
+    <span class="section-tag" style="color:rgba(255,255,255,0.7)">Suscribite</span>
+    <h2 class="newsletter-title">Novedades & Promociones</h2>
+    <p class="newsletter-subtitle">Sé la primera en enterarte de nuestras ofertas y lanzamientos exclusivos.</p>
+    <div class="newsletter-form"><input class="newsletter-input" type="email" id="newsletterEmail" placeholder="tucorreo@email.com"><button class="newsletter-btn" onclick="subscribeNewsletter()">Suscribirme</button></div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div class="page" id="page-about">
+  <div class="about-hero">
+    <span class="section-tag">Nuestra Historia</span>
+    <h1 class="about-hero-title">Hecha con<br><em>pasión & amor</em></h1>
+    <p style="color:var(--gray);max-width:500px;margin:0 auto;font-size:1.05rem">Somos más que una tienda. Somos un espacio donde cada mujer puede encontrar lo que la hace brillar.</p>
+  </div>
+  <section class="section">
+    <div class="about-grid">
+      <div class="about-img-placeholder">🌸</div>
+      <div class="about-text">
+        <span class="section-tag">Quiénes somos</span>
+        <h2 class="section-title" style="margin-bottom:1.5rem">Rochi Accesorios</h2>
+        <p class="lead">Nació de un sueño simple: hacer que cada mujer se sienta especial y hermosa.</p>
+        <p>Somos un emprendimiento familiar con sede en Argentina, apasionadas por la belleza, la moda y la regalería artesanal. Desde nuestros comienzos, nos dedicamos a curar colecciones cuidadosamente seleccionadas que combinan tendencia, calidad y ese toque especial que solo el amor al trabajo puede dar.</p>
+        <p>Creemos que la belleza no tiene edad ni forma. Por eso nuestra propuesta abarca desde maquillaje profesional y kits de cuidado personal, hasta ropa femenina moderna y regalería única creada con técnicas de sublimación y corte láser en madera.</p>
+        <div style="margin-top:2rem;display:flex;gap:3rem;flex-wrap:wrap">
+          <div><div style="font-family:var(--font-display);font-size:2.5rem;font-weight:700;color:var(--pink-deep)">+500</div><div style="font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gray)">Clientas felices</div></div>
+          <div><div style="font-family:var(--font-display);font-size:2.5rem;font-weight:700;color:var(--pink-deep)">+200</div><div style="font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gray)">Productos únicos</div></div>
+          <div><div style="font-family:var(--font-display);font-size:2.5rem;font-weight:700;color:var(--pink-deep)">5★</div><div style="font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gray)">Calificación promedio</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="newsletter-section">
+    <h2 class="newsletter-title">¿Querés ser parte de nuestra comunidad?</h2>
+    <p class="newsletter-subtitle">Seguinos en redes y suscribite para recibir las últimas novedades.</p>
+    <button class="btn-primary" style="border:none;cursor:pointer;padding:0.9rem 2.5rem" onclick="showPage('contact',null)">Contactanos →</button>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="page" id="page-products">
+  <div class="products-header">
+    <span class="section-tag">Catálogo completo</span>
+    <h1 class="section-title" style="font-size:clamp(2.2rem,4vw,3.5rem)">Nuestros Productos</h1>
+    <p style="color:var(--gray);margin-top:0.8rem">Explorá toda nuestra colección de belleza, moda y regalería artesanal.</p>
+  </div>
+  <section class="section" style="padding-top:3rem">
+    <div class="products-controls">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" onclick="filterProducts('all',this)">Todo</button>
+        <button class="filter-tab" onclick="filterProducts('makeup',this)">Maquillaje</button>
+        <button class="filter-tab" onclick="filterProducts('nails',this)">Uñas & Cejas</button>
+        <button class="filter-tab" onclick="filterProducts('skincare',this)">Estética Facial</button>
+        <button class="filter-tab" onclick="filterProducts('clothes',this)">Ropa</button>
+        <button class="filter-tab" onclick="filterProducts('gifts',this)">Regalería</button>
+      </div>
+      <select class="sort-select" onchange="sortProducts(this.value)">
+        <option value="default">Ordenar por...</option>
+        <option value="price-asc">Precio: menor a mayor</option>
+        <option value="price-desc">Precio: mayor a menor</option>
+        <option value="name">Nombre A-Z</option>
+      </select>
+    </div>
+    <div class="product-grid" id="allProductsGrid"></div>
+  </section>
+</div>
+
+<!-- CONTACT -->
+<div class="page" id="page-contact">
+  <div class="contact-hero">
+    <span class="section-tag">Hablemos</span>
+    <h1 class="about-hero-title" style="font-size:clamp(2.5rem,5vw,4.5rem)">Estamos aquí<br><em>para vos</em></h1>
+    <p style="color:var(--gray);max-width:460px;margin:0 auto">Consultas, pedidos personalizados o simplemente para saludar. ¡Escribinos!</p>
+  </div>
+  <section class="section">
+    <div class="contact-grid">
+      <div>
+        <div class="contact-info-block"><div class="contact-info-label">WhatsApp</div><div class="contact-info-value">+54 9 11 2345-6789</div></div>
+        <div class="contact-info-block"><div class="contact-info-label">Email</div><div class="contact-info-value"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3e4c515d56577e4c515d56575f5d5d5b4d514c57514d105d5153105f4c">[email&#160;protected]</a></div></div>
+        <div class="contact-info-block"><div class="contact-info-label">Ubicación</div><div class="contact-info-value">Buenos Aires, Argentina</div></div>
+        <div class="contact-info-block"><div class="contact-info-label">Horario</div><div class="contact-info-value">Lunes a Sábado, 9 a 20 hs.</div></div>
+        <div class="social-links">
+          <a class="social-link" href="#">📸 Instagram</a>
+          <a class="social-link" href="#">👍 Facebook</a>
+          <a class="social-link" href="#">🎵 TikTok</a>
+          <a class="social-link" href="#">💬 WhatsApp</a>
+        </div>
+      </div>
+      <div class="contact-form">
+        <div class="form-feedback success" id="contactSuccess">✅ ¡Mensaje enviado! Te respondemos a la brevedad.</div>
+        <div class="form-feedback error" id="contactError"></div>
+        <h3 style="font-family:var(--font-display);font-size:1.5rem;font-weight:600;margin-bottom:1.5rem">Envianos un mensaje</h3>
+        <div class="form-group"><label class="form-label">Nombre completo *</label><input class="form-input" type="text" id="cName" placeholder="Tu nombre"></div>
+        <div class="form-group"><label class="form-label">Email *</label><input class="form-input" type="email" id="cEmail" placeholder="tucorreo@email.com"></div>
+        <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" type="tel" id="cPhone" placeholder="+54 9 11 0000-0000"></div>
+        <div class="form-group"><label class="form-label">Asunto *</label>
+          <select class="form-input" id="cSubject"><option value="">Seleccioná una opción</option><option>Consulta sobre productos</option><option>Pedido personalizado</option><option>Envíos y seguimiento</option><option>Devoluciones</option><option>Otro</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Mensaje *</label><textarea class="form-input" id="cMsg" rows="5" placeholder="Contanos en qué podemos ayudarte..." style="resize:vertical"></textarea></div>
+        <button class="btn-primary" id="contactBtn" style="width:100%;padding:1rem;border:none;cursor:pointer" onclick="sendContactForm()">Enviar Mensaje →</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- CHECKOUT -->
+<div class="page" id="page-checkout">
+  <div style="background:var(--pink-blush);padding:3rem 2rem 2rem;text-align:center">
+    <span class="section-tag">Último paso</span>
+    <h1 class="section-title">Confirmar Pedido</h1>
+    <p style="color:var(--gray);margin-top:0.5rem">Revisá tu pedido y completá tus datos para enviarnos tu solicitud.</p>
+  </div>
+  <div id="checkoutContent"></div>
+  <div id="checkoutSuccess" class="hidden">
+    <div class="checkout-page">
+      <div class="confirmation-success">
+        <div class="success-icon">🎉</div>
+        <h2 class="success-title">¡Pedido Enviado!</h2>
+        <p class="success-text">Recibimos tu solicitud. Te contactaremos a la brevedad para coordinar el pago y el envío. ¡Gracias por elegirnos!</p>
+        <div class="order-number" id="orderNumberDisplay"></div>
+        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:1rem">
+          <button class="btn-primary" style="border:none;cursor:pointer" onclick="showPage('home',null)">Volver al inicio</button>
+          <button class="btn-outline" onclick="showPage('products',null)">Seguir comprando</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="page" id="page-admin">
+  <div id="adminLoginSection">
+    <div class="admin-login">
+      <div class="admin-login-box">
+        <div class="admin-logo">Rochi <em style="font-style:italic;color:var(--pink-deep)">Admin</em></div>
+        <div class="admin-logo-sub">Panel de Administración</div>
+        <div class="modal-msg error" id="adminLoginError"></div>
+        <div class="form-group"><label class="form-label">Usuario</label><input class="form-input" type="text" id="adminUser" placeholder="admin"></div>
+        <div class="form-group" style="margin-top:0.8rem"><label class="form-label">Contraseña</label><input class="form-input" type="password" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+        <button class="btn-primary" style="width:100%;padding:1rem;border:none;cursor:pointer;margin-top:1rem" onclick="adminLogin()">Ingresar al Panel</button>
+      </div>
+    </div>
+  </div>
+  <div id="adminDashboardSection" class="hidden">
+    <div class="admin-dashboard">
+      <div class="admin-topbar">
+        <div class="admin-topbar-logo">Rochi <span>Accesorios</span> — Panel Admin</div>
+        <button class="admin-logout" onclick="adminLogout()">Cerrar Sesión</button>
+      </div>
+      <div class="admin-content">
+        <div class="admin-stats" id="adminStats"></div>
+        <h2 class="admin-orders-title">Pedidos Recibidos <button class="admin-refresh-btn" onclick="loadAdminOrders()">↻ Actualizar</button></h2>
+        <div class="admin-table-wrap"><div id="adminOrdersContent"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer style="background:var(--black);color:rgba(255,255,255,0.75);padding:5rem 2rem 2rem">
+  <div style="max-width:1280px;margin:0 auto">
+    <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:3rem;margin-bottom:4rem">
+      <div>
+        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:700;color:white;margin-bottom:0.3rem">Rochi Accesorios</div>
+        <div style="font-family:var(--font-ui);font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--pink-mid);margin-bottom:1.2rem">Belleza · Moda · Regalería</div>
+        <p style="font-size:0.9rem;line-height:1.7;max-width:260px">Tu tienda de confianza para belleza, moda femenina y regalería artesanal.</p>
+      </div>
+      <div>
+        <div style="font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.22em;text-transform:uppercase;color:white;margin-bottom:1.2rem">Tienda</div>
+        <ul style="list-style:none">
+          <li style="margin-bottom:0.6rem"><a onclick="filterAndGoProducts('makeup')" style="font-size:0.9rem;color:rgba(255,255,255,0.6);cursor:pointer">Maquillaje</a></li>
+          <li style="margin-bottom:0.6rem"><a onclick="filterAndGoProducts('nails')" style="font-size:0.9rem;color:rgba(255,255,255,0.6);cursor:pointer">Uñas & Cejas</a></li>
+          <li style="margin-bottom:0.6rem"><a onclick="filterAndGoProducts('clothes')" style="font-size:0.9rem;color:rgba(255,255,255,0.6);cursor:pointer">Ropa Mujer</a></li>
+          <li style="margin-bottom:0.6rem"><a onclick="filterAndGoProducts('gifts')" style="font-size:0.9rem;color:rgba(255,255,255,0.6);cursor:pointer">Regalería</a></li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.22em;text-transform:uppercase;color:white;margin-bottom:1.2rem">Información</div>
+        <ul style="list-style:none">
+          <li style="margin-bottom:0.6rem"><a onclick="showPage('about',null)" style="font-size:0.9rem;color:rgba(255,255,255,0.6);cursor:pointer">Nuestra Historia</a></li>
+          <li style="margin-bottom:0.6rem"><a onclick="showPage('contact',null)" style="font-size:0.9rem;color:rgba(255,255,255,0.6);cursor:pointer">Contacto</a></li>
+          <li style="margin-bottom:0.6rem"><a style="font-size:0.9rem;color:rgba(255,255,255,0.6)">Envíos y Entregas</a></li>
+          <li style="margin-bottom:0.6rem"><a style="font-size:0.9rem;color:rgba(255,255,255,0.6)">Preguntas Frecuentes</a></li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-family:var(--font-ui);font-size:0.65rem;letter-spacing:0.22em;text-transform:uppercase;color:white;margin-bottom:1.2rem">Contacto</div>
+        <ul style="list-style:none">
+          <li style="margin-bottom:0.6rem;font-size:0.9rem;color:rgba(255,255,255,0.6)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="285a474b4041685a474b4041494b4b4d5b475a41475b064b474506495a">[email&#160;protected]</a></li>
+          <li style="margin-bottom:0.6rem;font-size:0.9rem;color:rgba(255,255,255,0.6)">+54 9 11 2345-6789</li>
+          <li style="margin-bottom:0.6rem;font-size:0.9rem;color:rgba(255,255,255,0.6)">Buenos Aires, Argentina</li>
+          <li style="margin-bottom:0.6rem;font-size:0.9rem;color:rgba(255,255,255,0.6)">Lun–Sáb: 9 a 20 hs.</li>
+        </ul>
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+      <div style="font-family:var(--font-ui);font-size:0.62rem;letter-spacing:0.1em;color:rgba(255,255,255,0.35);text-transform:uppercase">© 2025 Rochi Accesorios. Todos los derechos reservados.</div>
+      <button style="background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);padding:0.35rem 0.9rem;font-family:var(--font-ui);font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer" onclick="showPage('admin',null)">Admin ⚙</button>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"><span id="toastIcon">✓</span>&nbsp;<span id="toastMsg"></span></div>
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Volver arriba">↑</button>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+'use strict';
+// ===== SUPABASE =====
+const SUPABASE_URL='https://krbedelskftedoxqsmib.supabase.co';
+const SUPABASE_KEY='sb_publishable__ILuKmKH3_IpjxYrbDbUqg_oAOjygV0';
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const ADMIN_USER='admin',ADMIN_PASS='rochi2025';
+
+// ===== PRODUCTS =====
+const PRODUCTS=[
+  {id:1,name:'Labial Mate Rojo Pasión',category:'makeup',price:2800,oldPrice:3500,emoji:'💄',badge:'sale'},
+  {id:2,name:'Paleta de Sombras Doradas',category:'makeup',price:4500,oldPrice:null,emoji:'👁️',badge:'new'},
+  {id:3,name:'Base de Maquillaje Cobertura Total',category:'makeup',price:3200,oldPrice:4000,emoji:'✨',badge:'sale'},
+  {id:4,name:'Set de Brochas Profesionales',category:'makeup',price:5800,oldPrice:null,emoji:'🖌️',badge:null},
+  {id:5,name:'Iluminador en Polvo Rosado',category:'makeup',price:2200,oldPrice:null,emoji:'🌟',badge:'new'},
+  {id:6,name:'Kit Esmaltes Semipermanentes',category:'nails',price:4800,oldPrice:6000,emoji:'💅',badge:'sale'},
+  {id:7,name:'Set de Diseño de Cejas',category:'nails',price:2100,oldPrice:null,emoji:'🦋',badge:null},
+  {id:8,name:'Nail Art Decoraciones',category:'nails',price:1800,oldPrice:null,emoji:'🌸',badge:'new'},
+  {id:9,name:'Kit Limpieza Facial Completo',category:'skincare',price:5500,oldPrice:7000,emoji:'🧴',badge:'sale'},
+  {id:10,name:'Mascarilla de Arcilla Rosa',category:'skincare',price:2800,oldPrice:null,emoji:'🌷',badge:null},
+  {id:11,name:'Contorno de Ojos Reparador',category:'skincare',price:3900,oldPrice:null,emoji:'👀',badge:'new'},
+  {id:12,name:'Remera Floral Romántica',category:'clothes',price:3500,oldPrice:4500,emoji:'👗',badge:'sale'},
+  {id:13,name:'Blusa Satinada Nude',category:'clothes',price:4800,oldPrice:null,emoji:'✨',badge:'new'},
+  {id:14,name:'Conjunto Deportivo Pastel',category:'clothes',price:6200,oldPrice:8000,emoji:'🏃‍♀️',badge:'sale'},
+  {id:15,name:'Taza Sublimada Personalizada',category:'gifts',price:2500,oldPrice:null,emoji:'☕',badge:null},
+  {id:16,name:'Cuadro de Madera Láser',category:'gifts',price:4200,oldPrice:null,emoji:'🪵',badge:'new'},
+  {id:17,name:'Remera Personalizada',category:'gifts',price:3800,oldPrice:null,emoji:'👕',badge:null},
+  {id:18,name:'Kit Regalo Luxe',category:'gifts',price:7500,oldPrice:9500,emoji:'🎁',badge:'sale'},
+];
+
+let cart=JSON.parse(localStorage.getItem('rochi_cart')||'[]');
+let currentUser=null;
+let activeFilter='all';
+let currentPage='home';
+
+// ===== AUTH STATE =====
+db.auth.onAuthStateChange((_,session)=>{currentUser=session?.user||null;updateAuthUI();});
+async function initAuth(){const{data:{session}}=await db.auth.getSession();currentUser=session?.user||null;updateAuthUI();}
+
+function updateAuthUI(){
+  const chip=document.getElementById('userChip');
+  const nameEl=document.getElementById('userChipName');
+  const mobileLink=document.getElementById('mobileAuthLink');
+  if(currentUser){
+    const n=currentUser.user_metadata?.full_name||currentUser.email.split('@')[0];
+    nameEl.textContent=n;chip.classList.add('visible');
+    if(mobileLink)mobileLink.textContent='Cerrar Sesión';
+  }else{
+    chip.classList.remove('visible');
+    if(mobileLink)mobileLink.textContent='Mi Cuenta';
+  }
+}
+
+// ===== NAV =====
+function showPage(name,linkEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  currentPage=name;
+  window.scrollTo({top:0,behavior:'smooth'});
+  document.querySelectorAll('nav a.nav-btn').forEach(a=>a.classList.remove('active'));
+  if(linkEl)linkEl.classList.add('active');
+  if(name==='products')renderAllProducts();
+  if(name==='home')renderFeaturedProducts();
+  if(name==='checkout')renderCheckout();
+}
+function filterAndGoProducts(cat){
+  activeFilter=cat;showPage('products',null);
+  setTimeout(()=>{
+    const map={all:'Todo',makeup:'Maquillaje',nails:'Uñas & Cejas',skincare:'Estética Facial',clothes:'Ropa',gifts:'Regalería'};
+    document.querySelectorAll('#filterTabs .filter-tab').forEach(b=>b.classList.toggle('active',b.textContent.trim()===(map[cat]||'Todo')));
+    renderAllProducts();
+  },80);
+}
+
+// ===== PRODUCTS =====
+function catLabel(c){return{makeup:'Maquillaje',nails:'Uñas & Cejas',skincare:'Estética Facial',clothes:'Ropa Mujer',gifts:'Regalería'}[c]||c;}
+function productCard(p){
+  const inCart=cart.find(i=>i.id===p.id);
+  return `<article class="product-card">
+    <div class="product-img-wrap">
+      <div class="product-emoji">${p.emoji}</div>
+      ${p.badge?`<span class="product-badge ${p.badge}">${p.badge==='new'?'Nuevo':'Oferta'}</span>`:''}
+      <button class="product-wishlist" onclick="event.stopPropagation();showToast('💖','Agregado a favoritos')" aria-label="Favoritos">♡</button>
+    </div>
+    <div class="product-info">
+      <div class="product-category">${catLabel(p.category)}</div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-price-wrap">
+        <span class="product-price">$${p.price.toLocaleString('es-AR')}</span>
+        ${p.oldPrice?`<span class="product-price-old">$${p.oldPrice.toLocaleString('es-AR')}</span>`:''}
+      </div>
+      <button class="btn-add-cart${inCart?' in-cart':''}" onclick="addToCart(${p.id})">${inCart?'✓ En el carrito':'Agregar al carrito'}</button>
+    </div>
+  </article>`;
+}
+function renderFeaturedProducts(){const el=document.getElementById('featuredGrid');if(el)el.innerHTML=PRODUCTS.filter(p=>p.badge).slice(0,8).map(productCard).join('');}
+function renderAllProducts(){let list=activeFilter==='all'?PRODUCTS:PRODUCTS.filter(p=>p.category===activeFilter);const el=document.getElementById('allProductsGrid');if(el)el.innerHTML=list.map(productCard).join('');}
+function filterProducts(cat,btn){activeFilter=cat;document.querySelectorAll('#filterTabs .filter-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderAllProducts();}
+function sortProducts(val){
+  let list=activeFilter==='all'?[...PRODUCTS]:PRODUCTS.filter(p=>p.category===activeFilter);
+  if(val==='price-asc')list.sort((a,b)=>a.price-b.price);
+  else if(val==='price-desc')list.sort((a,b)=>b.price-a.price);
+  else if(val==='name')list.sort((a,b)=>a.name.localeCompare(b.name));
+  const el=document.getElementById('allProductsGrid');if(el)el.innerHTML=list.map(productCard).join('');
+}
+
+// ===== CART =====
+function addToCart(id){
+  const p=PRODUCTS.find(x=>x.id===id);if(!p)return;
+  const ex=cart.find(i=>i.id===id);if(ex)ex.qty++;else cart.push({id,name:p.name,price:p.price,emoji:p.emoji,qty:1});
+  localStorage.setItem('rochi_cart',JSON.stringify(cart));updateCartBadge();renderCartItems();
+  showToast('🛒',`"${p.name}" agregado al carrito`);
+  if(currentPage==='home')renderFeaturedProducts();
+  if(currentPage==='products')renderAllProducts();
+}
+function updateCartBadge(){const t=cart.reduce((s,i)=>s+i.qty,0);const b=document.getElementById('cartBadge');b.textContent=t;b.style.display=t>0?'flex':'none';}
+function renderCartItems(){
+  const el=document.getElementById('cartItemsEl');const footer=document.getElementById('cartFooter');if(!el)return;
+  if(!cart.length){el.innerHTML=`<div class="cart-empty"><div class="cart-empty-icon">🛒</div><p style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:0.5rem">Tu carrito está vacío</p><p style="font-size:0.9rem;color:var(--gray-light)">Agregá productos para comenzar</p></div>`;footer.style.display='none';return;}
+  footer.style.display='block';
+  el.innerHTML=cart.map(item=>`<div class="cart-item"><div class="cart-item-img">${item.emoji}</div><div><div class="cart-item-name">${item.name}</div><div class="cart-item-price">$${(item.price*item.qty).toLocaleString('es-AR')}</div><div class="cart-item-qty"><button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button><span class="qty-num">${item.qty}</span><button class="qty-btn" onclick="changeQty(${item.id},1)">+</button></div></div><button class="cart-remove" onclick="removeFromCart(${item.id})">✕</button></div>`).join('');
+  document.getElementById('cartTotalEl').textContent=`$${cart.reduce((s,i)=>s+i.price*i.qty,0).toLocaleString('es-AR')}`;
+}
+function changeQty(id,d){const item=cart.find(i=>i.id===id);if(!item)return;item.qty+=d;if(item.qty<=0)cart=cart.filter(i=>i.id!==id);localStorage.setItem('rochi_cart',JSON.stringify(cart));updateCartBadge();renderCartItems();}
+function removeFromCart(id){cart=cart.filter(i=>i.id!==id);localStorage.setItem('rochi_cart',JSON.stringify(cart));updateCartBadge();renderCartItems();showToast('✕','Producto eliminado del carrito');}
+function openCart(){document.getElementById('cartOverlay').classList.add('open');document.getElementById('cartPanel').classList.add('open');renderCartItems();}
+function closeCart(){document.getElementById('cartOverlay').classList.remove('open');document.getElementById('cartPanel').classList.remove('open');}
+function goToCheckout(){closeCart();showPage('checkout',null);}
+
+// ===== CHECKOUT =====
+function renderCheckout(){
+  const content=document.getElementById('checkoutContent');
+  const success=document.getElementById('checkoutSuccess');
+  content.classList.remove('hidden');success.classList.add('hidden');
+  if(!cart.length){content.innerHTML=`<div style="text-align:center;padding:4rem 2rem"><p style="font-family:var(--font-display);font-size:1.5rem;color:var(--gray)">Tu carrito está vacío.</p><button class="btn-primary" style="border:none;cursor:pointer;margin-top:1.5rem" onclick="showPage('products',null)">Ver Productos</button></div>`;return;}
+  const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const loggedName=currentUser?.user_metadata?.full_name||'';
+  const loggedEmail=currentUser?.email||'';
+  content.innerHTML=`<div class="checkout-page">
+    <div class="checkout-grid">
+      <div>
+        <div class="checkout-section-title">Tus datos</div>
+        <div class="form-group"><label class="form-label">Nombre completo *</label><input class="form-input" id="chkName" type="text" value="${loggedName}" placeholder="Tu nombre y apellido"></div>
+        <div class="form-group"><label class="form-label">Email *</label><input class="form-input" id="chkEmail" type="email" value="${loggedEmail}" placeholder="tucorreo@email.com"></div>
+        <div class="form-group"><label class="form-label">Teléfono / WhatsApp *</label><input class="form-input" id="chkPhone" type="tel" placeholder="+54 9 11 0000-0000"></div>
+        <div class="form-group"><label class="form-label">Dirección de entrega</label><input class="form-input" id="chkAddress" type="text" placeholder="Calle, número, ciudad"></div>
+      </div>
+      <div>
+        <div class="checkout-section-title">Notas adicionales</div>
+        <div class="form-group"><label class="form-label">Notas del pedido (opcional)</label><textarea class="form-input" id="chkNotes" rows="4" placeholder="Indicaciones especiales..."></textarea></div>
+        <div style="background:var(--pink-pale);padding:1rem;border:1px solid var(--pink-light);margin-top:1rem">
+          <p style="font-family:var(--font-ui);font-size:0.68rem;letter-spacing:0.08em;color:var(--gray);line-height:1.7">📌 <strong>IMPORTANTE:</strong> Este formulario confirma tu pedido. Nos contactaremos por WhatsApp para coordinar el pago y envío. No requiere pago online.</p>
+        </div>
+      </div>
+      <div style="grid-column:1/-1">
+        <div class="checkout-section-title">Resumen del pedido</div>
+        ${cart.map(item=>`<div class="checkout-item-row"><div class="checkout-item-icon">${item.emoji}</div><div class="checkout-item-name">${item.name}</div><div class="checkout-item-qty">× ${item.qty}</div><div class="checkout-item-price">$${(item.price*item.qty).toLocaleString('es-AR')}</div></div>`).join('')}
+        <div class="checkout-total-row"><span>Total estimado</span><span>$${total.toLocaleString('es-AR')}</span></div>
+      </div>
+    </div>
+    <button class="btn-confirm" id="confirmBtn" onclick="submitOrder()">Confirmar y Enviar Pedido →</button>
+  </div>`;
+}
+
+async function submitOrder(){
+  const name=document.getElementById('chkName')?.value.trim();
+  const email=document.getElementById('chkEmail')?.value.trim();
+  const phone=document.getElementById('chkPhone')?.value.trim();
+  const address=document.getElementById('chkAddress')?.value.trim()||'';
+  const notes=document.getElementById('chkNotes')?.value.trim()||'';
+  if(!name||!email||!phone){showToast('⚠️','Completá los campos obligatorios');return;}
+  const btn=document.getElementById('confirmBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Enviando pedido...';
+  const orderId='RA'+Date.now().toString().slice(-6);
+  const username=currentUser?.user_metadata?.full_name||currentUser?.email?.split('@')[0]||'Invitado';
+  const{error}=await db.from('orders').insert({id:orderId,customer_name:name,customer_email:email,customer_phone:phone,customer_address:address,notes,items:cart,total:cart.reduce((s,i)=>s+i.price*i.qty,0),username,status:'pending'});
+  if(error){showToast('❌','Error al enviar el pedido. Intentá de nuevo.');btn.disabled=false;btn.innerHTML='Confirmar y Enviar Pedido →';console.error(error);return;}
+  cart=[];localStorage.setItem('rochi_cart',JSON.stringify(cart));updateCartBadge();
+  document.getElementById('checkoutContent').classList.add('hidden');
+  document.getElementById('checkoutSuccess').classList.remove('hidden');
+  document.getElementById('orderNumberDisplay').textContent=`N° de pedido: ${orderId}`;
+}
+
+// ===== AUTH =====
+function handleAuthClick(){
+  if(currentUser){if(confirm('¿Querés cerrar sesión?')){db.auth.signOut();showToast('👋','Sesión cerrada correctamente');}}
+  else openAuthModal();
+}
+function openAuthModal(){document.getElementById('authModal').classList.add('open');}
+function closeAuthModal(){document.getElementById('authModal').classList.remove('open');}
+function switchAuthTab(tab,btn){
+  document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+  document.getElementById('loginForm').classList.toggle('active',tab==='login');
+  document.getElementById('registerForm').classList.toggle('active',tab==='register');
+}
+async function handleLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const errEl=document.getElementById('loginError');const btn=document.getElementById('loginBtn');
+  errEl.classList.remove('show');
+  if(!email||!pass){errEl.textContent='Completá email y contraseña.';errEl.classList.add('show');return;}
+  btn.innerHTML='<span class="spinner"></span>';btn.disabled=true;
+  const{error}=await db.auth.signInWithPassword({email,password:pass});
+  btn.innerHTML='Iniciar Sesión';btn.disabled=false;
+  if(error){errEl.textContent='Email o contraseña incorrectos.';errEl.classList.add('show');}
+  else{closeAuthModal();showToast('👋','¡Bienvenida de nuevo!');}
+}
+async function handleRegister(){
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const pass=document.getElementById('regPass').value;
+  const errEl=document.getElementById('registerError');const succEl=document.getElementById('registerSuccess');const btn=document.getElementById('registerBtn');
+  errEl.classList.remove('show');succEl.classList.remove('show');
+  if(!name||!email||pass.length<6){errEl.textContent='Completá todos los campos (contraseña mín. 6 caracteres).';errEl.classList.add('show');return;}
+  btn.innerHTML='<span class="spinner"></span>';btn.disabled=true;
+  const{error}=await db.auth.signUp({email,password:pass,options:{data:{full_name:name}}});
+  btn.innerHTML='Crear Cuenta';btn.disabled=false;
+  if(error){errEl.textContent=error.message.includes('already')?'Este email ya está registrado.':'Error al crear la cuenta.';errEl.classList.add('show');}
+  else{succEl.textContent='✅ ¡Cuenta creada! Revisá tu email para confirmar.';succEl.classList.add('show');setTimeout(()=>{closeAuthModal();showToast('🎉',`¡Bienvenida, ${name}!`);},2000);}
+}
+
+// ===== CONTACT =====
+async function sendContactForm(){
+  const name=document.getElementById('cName').value.trim();
+  const email=document.getElementById('cEmail').value.trim();
+  const phone=document.getElementById('cPhone').value.trim();
+  const subject=document.getElementById('cSubject').value;
+  const message=document.getElementById('cMsg').value.trim();
+  const succEl=document.getElementById('contactSuccess');const errEl=document.getElementById('contactError');const btn=document.getElementById('contactBtn');
+  succEl.classList.remove('show');errEl.classList.remove('show');
+  if(!name||!email||!message||!subject){showToast('⚠️','Completá todos los campos obligatorios');return;}
+  btn.innerHTML='<span class="spinner"></span>';btn.disabled=true;
+  const{error}=await db.from('contact_messages').insert({name,email,phone,subject,message});
+  btn.innerHTML='Enviar Mensaje →';btn.disabled=false;
+  if(error){errEl.textContent='❌ Error al enviar. Intentá de nuevo.';errEl.classList.add('show');}
+  else{succEl.classList.add('show');['cName','cEmail','cPhone','cMsg'].forEach(id=>document.getElementById(id).value='');document.getElementById('cSubject').value='';setTimeout(()=>succEl.classList.remove('show'),6000);}
+}
+
+// ===== NEWSLETTER =====
+async function subscribeNewsletter(){
+  const email=document.getElementById('newsletterEmail').value.trim();
+  if(!email||!email.includes('@')){showToast('⚠️','Ingresá un email válido');return;}
+  const{error}=await db.from('newsletter').insert({email});
+  if(error&&error.code==='23505')showToast('💌','Este email ya está suscripto');
+  else if(error)showToast('❌','Error al suscribirse.');
+  else{document.getElementById('newsletterEmail').value='';showToast('💌','¡Suscripción confirmada! Gracias.');}
+}
+
+// ===== ADMIN =====
+function adminLogin(){
+  const u=document.getElementById('adminUser').value.trim();
+  const p=document.getElementById('adminPass').value;
+  const errEl=document.getElementById('adminLoginError');
+  if(u===ADMIN_USER&&p===ADMIN_PASS){document.getElementById('adminLoginSection').style.display='none';document.getElementById('adminDashboardSection').classList.remove('hidden');errEl.classList.remove('show');loadAdminOrders();}
+  else{errEl.textContent='Credenciales incorrectas.';errEl.classList.add('show');}
+}
+function adminLogout(){document.getElementById('adminLoginSection').style.display='';document.getElementById('adminDashboardSection').classList.add('hidden');}
+
+async function loadAdminOrders(){
+  const statsEl=document.getElementById('adminStats');
+  const ordersEl=document.getElementById('adminOrdersContent');
+  ordersEl.innerHTML=`<div style="text-align:center;padding:3rem;color:var(--gray);font-family:var(--font-ui);font-size:0.8rem;letter-spacing:0.15em;text-transform:uppercase">Cargando pedidos...</div>`;
+  const{data:orders,error}=await db.from('orders').select('*').order('created_at',{ascending:false});
+  if(error){ordersEl.innerHTML=`<div class="admin-empty"><div class="admin-empty-icon">❌</div><p>Error: ${error.message}</p></div>`;return;}
+  const total=(orders||[]).reduce((s,o)=>s+Number(o.total),0);
+  const pending=(orders||[]).filter(o=>o.status==='pending').length;
+  const{count:subCount}=await db.from('newsletter').select('*',{count:'exact',head:true});
+  const{count:msgCount}=await db.from('contact_messages').select('*',{count:'exact',head:true});
+  statsEl.innerHTML=`
+    <div class="admin-stat-card"><div class="admin-stat-label">Total Pedidos</div><div class="admin-stat-value">${(orders||[]).length}</div></div>
+    <div class="admin-stat-card"><div class="admin-stat-label">Pendientes</div><div class="admin-stat-value">${pending}</div></div>
+    <div class="admin-stat-card"><div class="admin-stat-label">Facturación</div><div class="admin-stat-value">$${total.toLocaleString('es-AR')}</div></div>
+    <div class="admin-stat-card"><div class="admin-stat-label">Suscriptores</div><div class="admin-stat-value">${subCount||0}</div></div>
+    <div class="admin-stat-card"><div class="admin-stat-label">Mensajes</div><div class="admin-stat-value">${msgCount||0}</div></div>`;
+  if(!orders||!orders.length){ordersEl.innerHTML=`<div class="admin-empty"><div class="admin-empty-icon">📋</div><p style="font-family:var(--font-display);font-size:1.2rem">No hay pedidos aún</p></div>`;return;}
+  const rows=orders.map(o=>{
+    const items=Array.isArray(o.items)?o.items:[];
+    const summary=items.map(i=>`${i.emoji||''} ${i.name} (×${i.qty})`).join(', ');
+    const qty=items.reduce((s,i)=>s+i.qty,0);
+    const date=new Date(o.created_at).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<tr>
+      <td><strong>${o.id}</strong></td>
+      <td style="white-space:nowrap">${date}</td>
+      <td>${o.customer_name}</td>
+      <td>${o.username||'Invitado'}</td>
+      <td style="max-width:260px;white-space:normal;font-size:0.72rem">${summary}</td>
+      <td style="text-align:center">${qty}</td>
+      <td><strong>$${Number(o.total).toLocaleString('es-AR')}</strong></td>
+      <td>${o.customer_phone}</td>
+      <td><span class="order-status status-${o.status}">${o.status==='pending'?'Pendiente':'Confirmado'}</span></td>
+      <td><button onclick="toggleOrderStatus('${o.id}','${o.status}')" style="background:var(--black);color:white;border:none;padding:0.3rem 0.7rem;font-size:0.6rem;cursor:pointer;font-family:var(--font-ui)">${o.status==='pending'?'✓ Confirmar':'↩ Pendiente'}</button></td>
+    </tr>`;
+  }).join('');
+  ordersEl.innerHTML=`<table class="admin-table"><thead><tr><th>N° Pedido</th><th>Fecha</th><th>Cliente</th><th>Usuario</th><th>Items</th><th>Cant.</th><th>Total</th><th>Teléfono</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+async function toggleOrderStatus(id,current){
+  await db.from('orders').update({status:current==='pending'?'confirmed':'pending'}).eq('id',id);
+  loadAdminOrders();
+}
+
+// ===== SEARCH =====
+function toggleSearch(){
+  const o=document.getElementById('searchOverlay');o.classList.toggle('open');
+  if(o.classList.contains('open')){setTimeout(()=>document.getElementById('searchInput').focus(),100);document.getElementById('searchInput').value='';document.getElementById('searchResults').innerHTML='';}
+}
+function handleSearch(q){
+  const el=document.getElementById('searchResults');
+  if(q.length<2){el.innerHTML='';return;}
+  const res=PRODUCTS.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||catLabel(p.category).toLowerCase().includes(q.toLowerCase()));
+  if(!res.length){el.innerHTML=`<p style="font-family:var(--font-ui);font-size:0.75rem;color:var(--gray);text-align:center;letter-spacing:0.1em">Sin resultados para "${q}"</p>`;return;}
+  el.innerHTML=res.slice(0,6).map(p=>`<div onclick="addToCart(${p.id});toggleSearch()" style="display:flex;align-items:center;gap:1rem;padding:0.8rem;background:rgba(255,255,255,0.85);margin-bottom:0.4rem;cursor:pointer;border:1px solid var(--pink-light)" onmouseover="this.style.background='var(--pink-pale)'" onmouseout="this.style.background='rgba(255,255,255,0.85)'"><span style="font-size:1.8rem">${p.emoji}</span><div style="flex:1"><div style="font-family:var(--font-display);font-size:0.95rem;font-weight:600">${p.name}</div><div style="font-family:var(--font-ui);font-size:0.62rem;color:var(--gray);text-transform:uppercase;letter-spacing:0.1em">${catLabel(p.category)}</div></div><span style="font-family:var(--font-ui);font-weight:600">$${p.price.toLocaleString('es-AR')}</span></div>`).join('');
+}
+
+// ===== UI =====
+function openMobileNav(){document.getElementById('mobileNav').classList.add('open');}
+function closeMobileNav(){document.getElementById('mobileNav').classList.remove('open');}
+let toastTimeout;
+function showToast(icon,msg){
+  document.getElementById('toastIcon').textContent=icon;document.getElementById('toastMsg').textContent=msg;
+  const t=document.getElementById('toast');t.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>t.classList.remove('show'),3200);
+}
+window.addEventListener('scroll',()=>document.getElementById('backToTop').classList.toggle('visible',window.scrollY>500));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(document.getElementById('searchOverlay').classList.contains('open'))toggleSearch();closeCart();closeAuthModal();closeMobileNav();}});
+
+// ===== AUTH CALLBACK — procesa tokens de confirmación en la URL =====
+async function handleAuthCallback() {
+  const hash = window.location.hash;
+  if (hash && (hash.includes('access_token') || hash.includes('error'))) {
+    if (hash.includes('error')) {
+      const params = new URLSearchParams(hash.replace('#', ''));
+      const desc = (params.get('error_description') || 'Error de autenticación').replace(/\+/g, ' ');
+      setTimeout(() => showToast('❌', desc), 500);
+    } else {
+      // El SDK de Supabase lee el hash automáticamente
+      await new Promise(r => setTimeout(r, 800));
+      const { data } = await db.auth.getSession();
+      if (data?.session) {
+        currentUser = data.session.user;
+        updateAuthUI();
+        const name = currentUser?.user_metadata?.full_name || '';
+        setTimeout(() => showToast('🎉', `¡Cuenta confirmada! Bienvenida${name ? ', ' + name : ''}!`), 300);
+      }
+    }
+    // Limpiar el hash de la URL sin recargar
+    history.replaceState(null, '', window.location.pathname);
+  }
+}
+
+// ===== INIT =====
+(function(){
+  updateCartBadge();
+  renderFeaturedProducts();
+  initAuth();
+  handleAuthCallback();
+})();
+</script>
+</body>
+</html>
