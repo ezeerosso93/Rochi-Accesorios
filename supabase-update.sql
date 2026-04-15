@@ -51,3 +51,6 @@ INSERT INTO categories (name, slug, emoji, sort_order) VALUES
   ('Regalería',       'gifts',    '🎁', 5)
 ON CONFLICT (slug) DO NOTHING;
 */
+
+-- 5. ACTUALIZACION: Múltiples Imágenes
+ALTER TABLE products ADD COLUMN IF NOT EXISTS image_urls JSONB DEFAULT '[]'::jsonb;
