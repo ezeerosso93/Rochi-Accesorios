@@ -10,5 +10,6 @@ INSERT INTO site_settings (key, value) VALUES
 ('contact_address', 'Río Grande, Tierra del Fuego'),
 ('contact_schedule', 'Lun–Sáb: 9 a 20 hs.'),
 ('contact_instagram', ''),
-('contact_facebook', '')
+('contact_facebook', ''),
+('about_story', 'Lo que comenzó como un pequeño emprendimiento familiar de regalería, creció gracias a la confianza de nuestras clientas hasta convertirnos en un referente de moda y maquillaje en Río Grande.')
 ON CONFLICT (key) DO NOTHING;

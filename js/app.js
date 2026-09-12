@@ -136,6 +136,10 @@ async function loadSettingsFromDB() {
                 const input = document.getElementById('setContactFacebook'); if (input) input.value = s.value;
                 const el = document.getElementById('contactSocialFb'); if (el && s.value) el.href = s.value;
             }
+            if (s.key === 'about_story') {
+                const input = document.getElementById('setAboutStory'); if (input) input.value = s.value;
+                const el = document.getElementById('aboutStoryText'); if (el) el.textContent = s.value;
+            }
         });
     }
     const initField = (inputId, elId, def) => {
@@ -146,6 +150,7 @@ async function loadSettingsFromDB() {
     initField('setContactPhone', 'footerContactPhone', '+54 9 11 2345-6789');
     initField('setContactAddress', 'footerContactAddress', 'Río Grande, Tierra del Fuego');
     initField('setContactSchedule', 'footerContactSchedule', 'Lun–Sáb: 9 a 20 hs.');
+    initField('setAboutStory', 'aboutStoryText', 'Lo que comenzó como un pequeño emprendimiento familiar de regalería, creció gracias a la confianza de nuestras clientas hasta convertirnos en un referente de moda y maquillaje en Río Grande.');
 }
 
 // ===== NAV =====
@@ -663,13 +668,13 @@ async function saveSiteSettings() {
         'announcement_banner', 'admin_email', 'email_subject', 'email_template',
         'emailjs_public_key', 'emailjs_service_id', 'emailjs_template_id',
         'contact_email', 'contact_phone', 'contact_address', 'contact_schedule',
-        'contact_instagram', 'contact_facebook'
+        'contact_instagram', 'contact_facebook', 'about_story'
     ];
     const ids = [
         'setBannerText', 'setAdminEmail', 'setEmailSubject', 'setEmailTemplate',
         'setEmailJSKey', 'setEmailJSService', 'setEmailJSTemplate',
         'setContactEmail', 'setContactPhone', 'setContactAddress', 'setContactSchedule',
-        'setContactInstagram', 'setContactFacebook'
+        'setContactInstagram', 'setContactFacebook', 'setAboutStory'
     ];
     const values = ids.map(id => document.getElementById(id)?.value.trim() ?? '');
     const btn = document.getElementById('saveSettingsBtn');
@@ -715,6 +720,11 @@ async function saveSiteSettings() {
     const fbVal = document.getElementById('setContactFacebook')?.value;
     const fbEl = document.getElementById('contactSocialFb');
     if (fbEl && fbVal) fbEl.href = fbVal;
+
+    const aboutVal = document.getElementById('setAboutStory')?.value;
+    if (aboutVal) {
+        const el = document.getElementById('aboutStoryText'); if (el) el.textContent = aboutVal;
+    }
 }
 
 // ===== UI =====
