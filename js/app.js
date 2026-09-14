@@ -200,14 +200,54 @@ function productCard(p) {
     let urls = Array.isArray(p.image_urls) && p.image_urls.length > 0 ? p.image_urls : (p.image_url ? [p.image_url] : []);
     let imgContent = '';
     if (urls.length > 1) {
-        imgContent = `<div class="carousel-container" id="carousel-${cx}${p.id}" data-idx="0"><div class="carousel-inner" id="carousel-inner-${cx}${p.id}" style="width:${urls.length * 100}%">${urls.map(url => `<div class="carousel-slide" style="width:${100 / urls.length}%"><img src="${url}" loading="lazy" alt="${p.name}"></div>`).join('')}</div><button class="carousel-btn prev" onclick="event.stopPropagation();moveCarousel('${cx}${p.id}', -1)">‹</button><button class="carousel-btn next" onclick="event.stopPropagation();moveCarousel('${cx}${p.id}', 1)">›</button><div class="carousel-dots" id="carousel-dots-${cx}${p.id}">${urls.map((_, i) => `<div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="event.stopPropagation();setCarousel('${cx}${p.id}', ${i})"></div>`).join('')}</div></div>`;
+        imgContent = `<div class="carousel-container" id="carousel-${cx}${p.id}" data-idx="0" ontouchstart="handleCarouselTouchStart(event)" ontouchmove="handleCarouselTouchMove(event)" ontouchend="handleCarouselTouchEnd(event, '${cx}${p.id}')"><div class="carousel-inner" id="carousel-inner-${cx}${p.id}" style="width:${urls.length * 100}%">${urls.map(url => `<div class="carousel-slide" style="width:${100 / urls.length}%"><img src="${url}" loading="lazy" alt="${p.name}"></div>`).join('')}</div><button class="carousel-btn prev" onclick="event.stopPropagation();moveCarousel('${cx}${p.id}', -1)">‹</button><button class="carousel-btn next" onclick="event.stopPropagation();moveCarousel('${cx}${p.id}', 1)">›</button><div class="carousel-dots" id="carousel-dots-${cx}${p.id}">${urls.map((_, i) => `<div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="event.stopPropagation();setCarousel('${cx}${p.id}', ${i})"></div>`).join('')}</div></div>`;
     } else if (urls.length === 1) {
         imgContent = `<img src="${urls[0]}" class="product-image" loading="lazy" alt="${p.name}" onclick="event.stopPropagation(); openProductDetail(${p.id})" style="cursor:pointer">`;
     } else {
         imgContent = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--pink-pale);color:var(--gray);font-family:var(--font-ui);font-size:.8rem;text-transform:uppercase;letter-spacing:.1em" onclick="event.stopPropagation(); openProductDetail(${p.id})">Sin foto</div>`;
     }
-    return `<article class="product-card" onclick="openProductDetail(${p.id})"><div class="product-img-wrap" onclick="event.stopPropagation(); openProductDetail(${p.id})">${imgContent}${p.badge ? `<span class="product-badge ${p.badge}">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}<button class="product-wishlist" onclick="event.stopPropagation();showToast('💖','Agregado a favoritos')">♡</button></div><div class="product-info"><div class="product-category">${getCatName(p.category_slug || p.category)}</div><div class="product-name" style="cursor:pointer">${p.name}</div>${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-bottom:0.4rem;line-height:1.4">${p.description}</div>` : ''}<div class="product-price-wrap"><span class="product-price">$${Number(p.price).toLocaleString('es-AR')}</span>${p.old_price ? `<span class="product-price-old">$${Number(p.old_price).toLocaleString('es-AR')}</span>` : ''}${p.transfer_price ? `<span class="product-price-transfer" title="Precio abonando por transferencia"><span class="transfer-tag">Transf.</span> $${Number(p.transfer_price).toLocaleString('es-AR')}</span>` : ''}</div><button class="btn-add-cart${ic ? ' in-cart' : ''}" onclick="event.stopPropagation(); addToCart(${p.id})">${ic ? '✓ En el carrito' : 'Agregar al carrito'}</button></div></article>`;
+    return `<article class="product-card" onclick="if(_isSwiping) return; openProductDetail(${p.id})"><div class="product-img-wrap" onclick="if(_isSwiping) { event.stopPropagation(); return; } openProductDetail(${p.id})">${imgContent}${p.badge ? `<span class="product-badge ${p.badge}">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}<button class="product-wishlist" onclick="event.stopPropagation();showToast('💖','Agregado a favoritos')">♡</button></div><div class="product-info"><div class="product-category">${getCatName(p.category_slug || p.category)}</div><div class="product-name" style="cursor:pointer">${p.name}</div>${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-bottom:0.4rem;line-height:1.4">${p.description}</div>` : ''}<div class="product-price-wrap"><span class="product-price">$${Number(p.price).toLocaleString('es-AR')}</span>${p.old_price ? `<span class="product-price-old">$${Number(p.old_price).toLocaleString('es-AR')}</span>` : ''}${p.transfer_price ? `<span class="product-price-transfer" title="Precio abonando por transferencia"><span class="transfer-tag">Transf.</span> $${Number(p.transfer_price).toLocaleString('es-AR')}</span>` : ''}</div><button class="btn-add-cart${ic ? ' in-cart' : ''}" onclick="event.stopPropagation(); addToCart(${p.id})">${ic ? '✓ En el carrito' : 'Agregar al carrito'}</button></div></article>`;
 }
+
+let _touchStartX = 0;
+let _touchStartY = 0;
+let _touchMovedX = 0;
+let _touchMovedY = 0;
+let _isSwiping = false;
+
+function handleCarouselTouchStart(e) {
+    if (!e.touches || e.touches.length !== 1) return;
+    _touchStartX = e.touches[0].clientX;
+    _touchStartY = e.touches[0].clientY;
+    _touchMovedX = 0;
+    _touchMovedY = 0;
+    _isSwiping = false;
+}
+
+function handleCarouselTouchMove(e) {
+    if (!e.touches || e.touches.length !== 1) return;
+    _touchMovedX = e.touches[0].clientX - _touchStartX;
+    _touchMovedY = e.touches[0].clientY - _touchStartY;
+    if (Math.abs(_touchMovedX) > Math.abs(_touchMovedY) && Math.abs(_touchMovedX) > 10) {
+        _isSwiping = true;
+    }
+}
+
+function handleCarouselTouchEnd(e, key) {
+    if (_isSwiping) {
+        const threshold = 35;
+        if (Math.abs(_touchMovedX) >= threshold) {
+            e.stopPropagation();
+            if (_touchMovedX < 0) {
+                moveCarousel(key, 1);
+            } else {
+                moveCarousel(key, -1);
+            }
+        }
+        setTimeout(() => { _isSwiping = false; }, 250);
+    }
+}
+
 function moveCarousel(key, dir) {
     const el = document.getElementById('carousel-' + key); if (!el) return;
     const inner = document.getElementById('carousel-inner-' + key);
@@ -235,7 +275,7 @@ function openProductDetail(id) {
     let imgHtml = '';
     const cx = 'det-';
     if (urls.length > 1) {
-        imgHtml = `<div class="carousel-container" id="carousel-${cx}${p.id}" data-idx="0" style="height:100%"><div class="carousel-inner" id="carousel-inner-${cx}${p.id}" style="width:${urls.length * 100}%; height:100%">${urls.map(url => `<div class="carousel-slide" style="width:${100 / urls.length}%; height:100%; display:flex; align-items:center; justify-content:center"><img src="${url}" alt="${p.name}" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; background:var(--pink-pale)"></div>`).join('')}</div><button class="carousel-btn prev" onclick="event.stopPropagation(); moveCarousel('${cx}${p.id}', -1)">‹</button><button class="carousel-btn next" onclick="event.stopPropagation(); moveCarousel('${cx}${p.id}', 1)">›</button><div class="carousel-dots" id="carousel-dots-${cx}${p.id}">${urls.map((_, i) => `<div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="event.stopPropagation(); setCarousel('${cx}${p.id}', ${i})"></div>`).join('')}</div></div>`;
+        imgHtml = `<div class="carousel-container" id="carousel-${cx}${p.id}" data-idx="0" style="height:100%" ontouchstart="handleCarouselTouchStart(event)" ontouchmove="handleCarouselTouchMove(event)" ontouchend="handleCarouselTouchEnd(event, '${cx}${p.id}')"><div class="carousel-inner" id="carousel-inner-${cx}${p.id}" style="width:${urls.length * 100}%; height:100%">${urls.map(url => `<div class="carousel-slide" style="width:${100 / urls.length}%; height:100%; display:flex; align-items:center; justify-content:center"><img src="${url}" alt="${p.name}" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; background:var(--pink-pale)"></div>`).join('')}</div><button class="carousel-btn prev" onclick="event.stopPropagation(); moveCarousel('${cx}${p.id}', -1)">‹</button><button class="carousel-btn next" onclick="event.stopPropagation(); moveCarousel('${cx}${p.id}', 1)">›</button><div class="carousel-dots" id="carousel-dots-${cx}${p.id}">${urls.map((_, i) => `<div class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="event.stopPropagation(); setCarousel('${cx}${p.id}', ${i})"></div>`).join('')}</div></div>`;
     } else if (urls.length === 1) {
         imgHtml = `<img src="${urls[0]}" alt="${p.name}" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; background:var(--pink-pale)">`;
     } else {
