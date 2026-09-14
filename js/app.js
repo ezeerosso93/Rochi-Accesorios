@@ -75,7 +75,7 @@ async function loadCatsFromDB() {
 async function loadProdsFromDB() {
     if (!db) return;
     const { data, error } = await db.from('products').select('*').order('id');
-    if (!error && data && data.length > 0) allProds = data.map(p => ({ ...p, old_price: p.old_price || null, badge: p.badge || null, description: p.description || '' }));
+    if (!error && data && data.length > 0) allProds = data.map(p => ({ ...p, old_price: p.old_price ? Number(p.old_price) : null, transfer_price: p.transfer_price ? Number(p.transfer_price) : null, badge: p.badge || null, description: p.description || '' }));
     renderFeaturedProducts();
     if (currentPage === 'products') renderAllProducts();
 }
@@ -206,7 +206,7 @@ function productCard(p) {
     } else {
         imgContent = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--pink-pale);color:var(--gray);font-family:var(--font-ui);font-size:.8rem;text-transform:uppercase;letter-spacing:.1em" onclick="event.stopPropagation(); openProductDetail(${p.id})">Sin foto</div>`;
     }
-    return `<article class="product-card" onclick="openProductDetail(${p.id})"><div class="product-img-wrap" onclick="event.stopPropagation(); openProductDetail(${p.id})">${imgContent}${p.badge ? `<span class="product-badge ${p.badge}">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}<button class="product-wishlist" onclick="event.stopPropagation();showToast('💖','Agregado a favoritos')">♡</button></div><div class="product-info"><div class="product-category">${getCatName(p.category_slug || p.category)}</div><div class="product-name" style="cursor:pointer">${p.name}</div>${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-bottom:0.4rem;line-height:1.4">${p.description}</div>` : ''}<div class="product-price-wrap"><span class="product-price">$${Number(p.price).toLocaleString('es-AR')}</span>${p.old_price ? `<span class="product-price-old">$${Number(p.old_price).toLocaleString('es-AR')}</span>` : ''}</div><button class="btn-add-cart${ic ? ' in-cart' : ''}" onclick="event.stopPropagation(); addToCart(${p.id})">${ic ? '✓ En el carrito' : 'Agregar al carrito'}</button></div></article>`;
+    return `<article class="product-card" onclick="openProductDetail(${p.id})"><div class="product-img-wrap" onclick="event.stopPropagation(); openProductDetail(${p.id})">${imgContent}${p.badge ? `<span class="product-badge ${p.badge}">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}<button class="product-wishlist" onclick="event.stopPropagation();showToast('💖','Agregado a favoritos')">♡</button></div><div class="product-info"><div class="product-category">${getCatName(p.category_slug || p.category)}</div><div class="product-name" style="cursor:pointer">${p.name}</div>${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-bottom:0.4rem;line-height:1.4">${p.description}</div>` : ''}<div class="product-price-wrap"><span class="product-price">$${Number(p.price).toLocaleString('es-AR')}</span>${p.old_price ? `<span class="product-price-old">$${Number(p.old_price).toLocaleString('es-AR')}</span>` : ''}${p.transfer_price ? `<span class="product-price-transfer" title="Precio abonando por transferencia"><span class="transfer-tag">Transf.</span> $${Number(p.transfer_price).toLocaleString('es-AR')}</span>` : ''}</div><button class="btn-add-cart${ic ? ' in-cart' : ''}" onclick="event.stopPropagation(); addToCart(${p.id})">${ic ? '✓ En el carrito' : 'Agregar al carrito'}</button></div></article>`;
 }
 function moveCarousel(key, dir) {
     const el = document.getElementById('carousel-' + key); if (!el) return;
@@ -241,7 +241,7 @@ function openProductDetail(id) {
     } else {
         imgHtml = `<div style="font-size:4rem">📦</div>`;
     }
-    detailContent.innerHTML = `<div class="product-detail-grid"><div class="product-detail-img-side">${imgHtml}${p.badge ? `<span class="product-badge ${p.badge}" style="top:1.5rem; left:1.5rem">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}</div><div class="product-detail-info-side"><div class="product-detail-cat">${getCatName(p.category_slug || p.category)}</div><h2 class="product-detail-name">${p.name}</h2><div class="product-detail-price-row"><span class="product-detail-price">$${Number(p.price).toLocaleString('es-AR')}</span>${p.old_price ? `<span class="product-detail-old-price">$${Number(p.old_price).toLocaleString('es-AR')}</span>` : ''}</div><div class="product-detail-desc">${p.description || 'Sin descripción disponible para este producto.'}</div><div class="product-detail-actions"><button class="btn-primary" onclick="addToCart(${p.id}); closeProductDetail()" style="width:100%; padding: 1.2rem;">${ic ? '✓ En el carrito (Sumar otro)' : 'Agregar al carrito'}</button><p style="font-size: 0.75rem; color: var(--gray); text-align: center; font-family: var(--font-ui); letter-spacing: 0.05em;">✨ Envío a todo el país | ✨ Atención personalizada</p></div></div></div>`;
+    detailContent.innerHTML = `<div class="product-detail-grid"><div class="product-detail-img-side">${imgHtml}${p.badge ? `<span class="product-badge ${p.badge}" style="top:1.5rem; left:1.5rem">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}</div><div class="product-detail-info-side"><div class="product-detail-cat">${getCatName(p.category_slug || p.category)}</div><h2 class="product-detail-name">${p.name}</h2><div class="product-detail-price-row"><span class="product-detail-price">$${Number(p.price).toLocaleString('es-AR')}</span>${p.old_price ? `<span class="product-detail-old-price">$${Number(p.old_price).toLocaleString('es-AR')}</span>` : ''}${p.transfer_price ? `<span class="product-detail-price-transfer" title="Precio abonando por transferencia"><span class="transfer-tag">Transf.</span> $${Number(p.transfer_price).toLocaleString('es-AR')}</span>` : ''}</div><div class="product-detail-desc">${p.description || 'Sin descripción disponible para este producto.'}</div><div class="product-detail-actions"><button class="btn-primary" onclick="addToCart(${p.id}); closeProductDetail()" style="width:100%; padding: 1.2rem;">${ic ? '✓ En el carrito (Sumar otro)' : 'Agregar al carrito'}</button><p style="font-size: 0.75rem; color: var(--gray); text-align: center; font-family: var(--font-ui); letter-spacing: 0.05em;">✨ Envío a todo el país | ✨ Atención personalizada</p></div></div></div>`;
     detailModal.classList.add('open');
     document.body.style.overflow = 'hidden';
 }
@@ -489,6 +489,7 @@ function openProductForm(product = null) {
     const idEl = document.getElementById('productEditId'); if (idEl) idEl.value = product?.id || '';
     const na = document.getElementById('pName'); if (na) na.value = product?.name || '';
     const pr = document.getElementById('pPrice'); if (pr) pr.value = product?.price || '';
+    const pt = document.getElementById('pTransferPrice'); if (pt) pt.value = product?.transfer_price || '';
     const op = document.getElementById('pOldPrice'); if (op) op.value = product?.old_price || '';
     const de = document.getElementById('pDesc'); if (de) de.value = product?.description || '';
     const ba = document.getElementById('pBadge'); if (ba) ba.value = product?.badge || '';
@@ -548,6 +549,7 @@ async function saveProduct() {
     const name = document.getElementById('pName')?.value.trim();
     const category_slug = document.getElementById('pCategory')?.value;
     const price = Number(document.getElementById('pPrice')?.value);
+    const transfer_price = document.getElementById('pTransferPrice')?.value ? Number(document.getElementById('pTransferPrice').value) : null;
     const old_price = document.getElementById('pOldPrice')?.value ? Number(document.getElementById('pOldPrice').value) : null;
     const description = document.getElementById('pDesc')?.value.trim();
     const badge = document.getElementById('pBadge')?.value || null;
@@ -565,14 +567,14 @@ async function saveProduct() {
         const { data: { publicUrl } } = db.storage.from('products').getPublicUrl(ud.path);
         currentEditImages.push(publicUrl);
     }
-    const payload = { name, category_slug, price, old_price, description, badge, image_urls: currentEditImages, image_url: currentEditImages.length > 0 ? currentEditImages[0] : null };
+    const payload = { name, category_slug, price, old_price, transfer_price, description, badge, image_urls: currentEditImages, image_url: currentEditImages.length > 0 ? currentEditImages[0] : null };
     let error;
     if (editId) {
         ({ error } = await db.from('products').update(payload).eq('id', editId));
         if (!error) { const idx = allProds.findIndex(p => String(p.id) === String(editId)); if (idx > -1) allProds[idx] = { ...allProds[idx], ...payload, id: Number(editId) }; }
     } else {
         const { data, error: e } = await db.from('products').insert(payload).select().single();
-        error = e; if (!error && data) allProds.push(data); else if (!error) allProds.push({ ...payload, id: Date.now() });
+        error = e; if (!error && data) allProds.push({ ...data, transfer_price: data.transfer_price ? Number(data.transfer_price) : null }); else if (!error) allProds.push({ ...payload, id: Date.now() });
     }
     if (btn) { btn.innerHTML = orgTxt; btn.disabled = false; }
     if (error) { showToast('❌', 'Error: ' + error.message); return; }
@@ -587,11 +589,15 @@ function renderAdminProducts() {
     const sorted = [...allProds].sort((a, b) => {
         let vA = a[adminSortKey], vB = b[adminSortKey];
         if (adminSortKey === 'category') { vA = getCatName(a.category_slug || a.category); vB = getCatName(b.category_slug || b.category); }
+        if (adminSortKey === 'price' || adminSortKey === 'old_price' || adminSortKey === 'transfer_price') {
+            vA = vA != null ? Number(vA) : 0;
+            vB = vB != null ? Number(vB) : 0;
+        }
         if (typeof vA === 'string') vA = vA.toLowerCase(); if (typeof vB === 'string') vB = vB.toLowerCase();
         if (vA < vB) return adminSortDir === 'asc' ? -1 : 1; if (vA > vB) return adminSortDir === 'asc' ? 1 : -1; return 0;
     });
     const getSortIcon = (key) => adminSortKey === key ? (adminSortDir === 'asc' ? ' ▴' : ' ▾') : '';
-    el.innerHTML = `<table class="admin-table"><thead><tr><th>Emoji/Img</th><th onclick="sortAdminTable('name')" style="cursor:pointer">Nombre${getSortIcon('name')}</th><th onclick="sortAdminTable('category')" style="cursor:pointer">Categoría${getSortIcon('category')}</th><th onclick="sortAdminTable('price')" style="cursor:pointer">Precio${getSortIcon('price')}</th><th onclick="sortAdminTable('old_price')" style="cursor:pointer">Precio ant.${getSortIcon('old_price')}</th><th onclick="sortAdminTable('badge')" style="cursor:pointer">Badge${getSortIcon('badge')}</th><th>Acciones</th></tr></thead><tbody>${sorted.map(p => `<tr><td>${p.image_url ? `<img src="${p.image_url}" style="width:30px;height:30px;object-fit:cover;border-radius:4px">` : p.emoji || '📦'}</td><td><strong>${p.name}</strong></td><td>${getCatName(p.category_slug || p.category)}</td><td>$${Number(p.price).toLocaleString('es-AR')}</td><td>${p.old_price ? '$' + Number(p.old_price).toLocaleString('es-AR') : '—'}</td><td><select onchange="updateProductBadge('${p.id}', this.value)" class="admin-badge-select ${p.badge || ''}"><option value="">— Sin —</option><option value="new" ${p.badge === 'new' ? 'selected' : ''}>Nuevo</option><option value="offer" ${p.badge === 'offer' ? 'selected' : ''}>Oferta</option><option value="hot" ${p.badge === 'hot' ? 'selected' : ''}>Destacado</option></select></td><td><div class="crud-actions"><button class="btn-edit" onclick="openProductForm(allProds.find(x=>String(x.id)===String(${p.id})))">✏️</button><button class="btn-delete" onclick="deleteProduct(${p.id})">🗑️</button></div></td></tr>`).join('')}</tbody></table>`;
+    el.innerHTML = `<table class="admin-table"><thead><tr><th>Emoji/Img</th><th onclick="sortAdminTable('name')" style="cursor:pointer">Nombre${getSortIcon('name')}</th><th onclick="sortAdminTable('category')" style="cursor:pointer">Categoría${getSortIcon('category')}</th><th onclick="sortAdminTable('price')" style="cursor:pointer">Precio${getSortIcon('price')}</th><th onclick="sortAdminTable('transfer_price')" style="cursor:pointer">Precio transf.${getSortIcon('transfer_price')}</th><th onclick="sortAdminTable('old_price')" style="cursor:pointer">Precio ant.${getSortIcon('old_price')}</th><th onclick="sortAdminTable('badge')" style="cursor:pointer">Badge${getSortIcon('badge')}</th><th>Acciones</th></tr></thead><tbody>${sorted.map(p => `<tr><td>${p.image_url ? `<img src="${p.image_url}" style="width:30px;height:30px;object-fit:cover;border-radius:4px">` : p.emoji || '📦'}</td><td><strong>${p.name}</strong></td><td>${getCatName(p.category_slug || p.category)}</td><td>$${Number(p.price).toLocaleString('es-AR')}</td><td>${p.transfer_price ? '$' + Number(p.transfer_price).toLocaleString('es-AR') : '—'}</td><td>${p.old_price ? '$' + Number(p.old_price).toLocaleString('es-AR') : '—'}</td><td><select onchange="updateProductBadge('${p.id}', this.value)" class="admin-badge-select ${p.badge || ''}"><option value="">— Sin —</option><option value="new" ${p.badge === 'new' ? 'selected' : ''}>Nuevo</option><option value="offer" ${p.badge === 'offer' ? 'selected' : ''}>Oferta</option><option value="hot" ${p.badge === 'hot' ? 'selected' : ''}>Destacado</option></select></td><td><div class="crud-actions"><button class="btn-edit" onclick="openProductForm(allProds.find(x=>String(x.id)===String(${p.id})))">✏️</button><button class="btn-delete" onclick="deleteProduct(${p.id})">🗑️</button></div></td></tr>`).join('')}</tbody></table>`;
 }
 
 // --- ADMIN CATEGORIES ---

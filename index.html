@@ -152,11 +152,15 @@
         <div class="hero-right">
           <div class="hero-float-card">
             <div class="float-card-label">Tendencia</div>
-            <div class="float-card-value">Maquillaje Pro</div>
+            <div class="float-card-value">Productos personalizados</div>
           </div>
           <div class="hero-float-card">
             <div class="float-card-label">Artesanal</div>
             <div class="float-card-value">Regalos Únicos</div>
+          </div>
+          <div class="hero-float-card">
+            <div class="float-card-label">Detalles</div>
+            <div class="float-card-value">Hecho con amor</div>
           </div>
           <div class="hero-center-icon">🌸</div>
         </div>
@@ -243,14 +247,14 @@
     <section class="page" id="page-nosotros">
       <div class="about-hero">
         <span class="section-tag">Desde 2021</span>
-        <h1 class="about-hero-title">Pasión por los detalles y la belleza artesanal</h1>
+        <h1 class="about-hero-title">Pasión por los detalles y el trabajo artesanal</h1>
       </div>
       <div class="section">
         <div class="about-grid">
           <div class="about-img-placeholder">🌸</div>
           <div class="about-text">
-            <p class="lead">Rochi Accesorios nació del deseo de acercar belleza y originalidad a cada rincón.</p>
-            <p id="aboutStoryText">Lo que comenzó como un pequeño emprendimiento familiar de regalería, creció gracias a la confianza de
+            <p id="aboutStoryText">Lo que comenzó como un pequeño emprendimiento familiar de regalería, creció gracias a
+              la confianza de
               nuestras clientas hasta convertirnos en un referente de moda y maquillaje en Río Grande.</p>
             <p>Realizamos productos personalizados, coordinando tu idea y nuestro trabajo en sublimación, grabado laser
               e impresión 3D.</p>
@@ -376,7 +380,7 @@
       <div id="adminDashboardSection" class="hidden">
         <div class="admin-dashboard">
           <div class="admin-topbar">
-            <div class="admin-topbar-logo">Rochi <span>Accesorios</span> — Admin</div>
+            <div class="admin-topbar-logo">Rochi <span>Personalizados</span> — Admin</div>
             <div class="admin-tabs">
               <button class="admin-tab-btn active" onclick="switchAdminTab('orders',this)">📋 Pedidos</button>
               <button class="admin-tab-btn" onclick="switchAdminTab('products',this)">📦 Productos</button>
@@ -423,19 +427,21 @@
                       type="text" id="pName" placeholder="Nombre del producto"></div>
                   <div class="form-group"><label class="form-label">Categoría *</label><select class="form-input"
                       id="pCategory"></select></div>
-                  <div class="form-group"><label class="form-label">Precio *</label><input class="form-input"
+                  <div class="form-group"><label class="form-label">Precio regular *</label><input class="form-input"
                       type="number" id="pPrice" placeholder="2500"></div>
+                  <div class="form-group"><label class="form-label">Precio transferencia (opcional)</label><input
+                      class="form-input" type="number" id="pTransferPrice" placeholder="2200"></div>
                   <div class="form-group"><label class="form-label">Precio anterior (opcional)</label><input
                       class="form-input" type="number" id="pOldPrice" placeholder="3000"></div>
-                  <div class="form-group" style="grid-column: 1 / -1;"><label class="form-label">Breve
-                      descripción</label><textarea class="form-input" id="pDesc" rows="3"
-                      placeholder="Descripción del producto..."></textarea></div>
                   <div class="form-group"><label class="form-label">Badge</label><select class="form-input" id="pBadge">
                       <option value="">Sin badge</option>
                       <option value="new">Nuevo</option>
                       <option value="offer">Oferta</option>
                       <option value="hot">Destacado</option>
                     </select></div>
+                  <div class="form-group" style="grid-column: 1 / -1;"><label class="form-label">Breve
+                      descripción</label><textarea class="form-input" id="pDesc" rows="3"
+                      placeholder="Descripción del producto..."></textarea></div>
                   <div class="form-group" style="grid-column: 1 / -1;"><label class="form-label">Imágenes</label><input
                       class="form-input" style="padding:0.4rem" type="file" id="pImageFile" accept="image/*" multiple
                       onchange="previewProductImageMulti(event)">
@@ -554,10 +560,10 @@
         <div>
           <div
             style="font-family:var(--font-display);font-size:1.5rem;font-weight:700;color:white;margin-bottom:0.3rem">
-            Rochi Accesorios</div>
+            Rochi Personalizados</div>
           <div
             style="font-family:var(--font-ui);font-size:0.6rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--pink-mid);margin-bottom:1.2rem">
-            Belleza • Moda • Regalería</div>
+            Indumentaria • Accesorios</div>
           <p style="font-size:0.9rem;line-height:1.7;max-width:260px">Tu tienda de confianza para belleza, moda femenina
             y regalería artesanal en Río Grande.</p>
         </div>
@@ -600,7 +606,7 @@
         style="border-top:1px solid rgba(255,255,255,0.08);padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
         <div
           style="font-family:var(--font-ui);font-size:0.62rem;letter-spacing:0.1em;color:rgba(255,255,255,0.35);text-transform:uppercase">
-          © 2025 Rochi Accesorios. Todos los derechos reservados.</div>
+          © 2025 Rochi Personalizados. Todos los derechos reservados.</div>
         <button
           style="background:none;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);padding:0.35rem 0.9rem;font-family:var(--font-ui);font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer"
           onclick="showPage('admin',null)">Admin ⚙</button>

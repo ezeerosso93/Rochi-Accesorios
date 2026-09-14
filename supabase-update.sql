@@ -54,3 +54,7 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- 5. ACTUALIZACION: Múltiples Imágenes
 ALTER TABLE products ADD COLUMN IF NOT EXISTS image_urls JSONB DEFAULT '[]'::jsonb;
+
+-- 6. ACTUALIZACION: Precio por Transferencia
+ALTER TABLE products ADD COLUMN IF NOT EXISTS transfer_price NUMERIC;
+
