@@ -427,11 +427,18 @@
                       type="text" id="pName" placeholder="Nombre del producto"></div>
                   <div class="form-group"><label class="form-label">Categoría *</label><select class="form-input"
                       id="pCategory"></select></div>
-                  <div class="form-group"><label class="form-label">Precio regular *</label><input class="form-input"
+                  <div class="form-group no-price-check-wrap" style="grid-column: 1 / -1;">
+                    <label class="no-price-check-label">
+                      <input type="checkbox" id="pNoPrice" onchange="toggleNoPriceCheckbox(this.checked)">
+                      <span><strong>Producto sin precio fijo</strong> (Mostrar "Consultar")</span>
+                    </label>
+                    <div class="no-price-check-hint">Tildá esta opción si el precio varía según lo acordado con el cliente (a cotizar/personalizado).</div>
+                  </div>
+                  <div class="form-group"><label class="form-label" id="lblProductPrice">Precio regular *</label><input class="form-input"
                       type="number" id="pPrice" placeholder="2500"></div>
-                  <div class="form-group"><label class="form-label">Precio transferencia (opcional)</label><input
+                  <div class="form-group"><label class="form-label" id="lblProductTransferPrice">Precio transferencia (opcional)</label><input
                       class="form-input" type="number" id="pTransferPrice" placeholder="2200"></div>
-                  <div class="form-group"><label class="form-label">Precio anterior (opcional)</label><input
+                  <div class="form-group"><label class="form-label" id="lblProductOldPrice">Precio anterior (opcional)</label><input
                       class="form-input" type="number" id="pOldPrice" placeholder="3000"></div>
                   <div class="form-group"><label class="form-label">Badge</label><select class="form-input" id="pBadge">
                       <option value="">Sin badge</option>

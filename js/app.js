@@ -75,7 +75,14 @@ async function loadCatsFromDB() {
 async function loadProdsFromDB() {
     if (!db) return;
     const { data, error } = await db.from('products').select('*').order('id');
-    if (!error && data && data.length > 0) allProds = data.map(p => ({ ...p, old_price: p.old_price ? Number(p.old_price) : null, transfer_price: p.transfer_price ? Number(p.transfer_price) : null, badge: p.badge || null, description: p.description || '' }));
+    if (!error && data && data.length > 0) allProds = data.map(p => ({
+        ...p,
+        price: p.price != null ? Number(p.price) : 0,
+        old_price: p.old_price ? Number(p.old_price) : null,
+        transfer_price: p.transfer_price ? Number(p.transfer_price) : null,
+        badge: p.badge || null,
+        description: p.description || ''
+    }));
     renderFeaturedProducts();
     if (currentPage === 'products') renderAllProducts();
 }
@@ -193,10 +200,28 @@ function renderFooterCats() {
 }
 
 // ===== PRODUCTS =====
+function getStoreWhatsAppPhone() {
+    const waEl = document.getElementById('contactSocialWa');
+    if (waEl && waEl.href && waEl.href.includes('wa.me/')) {
+        const p = waEl.href.split('wa.me/')[1]?.split('?')[0];
+        if (p) return p;
+    }
+    const phoneEl = document.getElementById('contactPagePhone') || document.getElementById('footerContactPhone');
+    const phone = phoneEl ? phoneEl.textContent.trim().replace(/[^0-9]/g, '') : '';
+    return phone || '5491123456789';
+}
+
+function getProductWhatsAppUrl(p) {
+    const phone = getStoreWhatsAppPhone();
+    const text = encodeURIComponent(`¡Hola! Quisiera consultar el precio y disponibilidad del producto: "${p.name}".`);
+    return `https://wa.me/${phone}?text=${text}`;
+}
+
 let _cardCtx = '';
 function productCard(p) {
     const ic = cart.find(i => i.id === p.id);
     const cx = _cardCtx;
+    const isConsult = !p.price || Number(p.price) <= 0;
     let urls = Array.isArray(p.image_urls) && p.image_urls.length > 0 ? p.image_urls : (p.image_url ? [p.image_url] : []);
     let imgContent = '';
     if (urls.length > 1) {
@@ -206,7 +231,13 @@ function productCard(p) {
     } else {
         imgContent = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--pink-pale);color:var(--gray);font-family:var(--font-ui);font-size:.8rem;text-transform:uppercase;letter-spacing:.1em" onclick="event.stopPropagation(); openProductDetail(${p.id})">Sin foto</div>`;
     }
-    return `<article class="product-card" onclick="if(_isSwiping) return; openProductDetail(${p.id})"><div class="product-img-wrap" onclick="if(_isSwiping) { event.stopPropagation(); return; } openProductDetail(${p.id})">${imgContent}${p.badge ? `<span class="product-badge ${p.badge}">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}<button class="product-wishlist" onclick="event.stopPropagation();showToast('💖','Agregado a favoritos')">♡</button></div><div class="product-info"><div class="product-category">${getCatName(p.category_slug || p.category)}</div><div class="product-name" style="cursor:pointer">${p.name}</div>${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-bottom:0.4rem;line-height:1.4">${p.description}</div>` : ''}<div class="product-price-wrap"><span class="product-price">$${Number(p.price).toLocaleString('es-AR')}</span>${p.old_price ? `<span class="product-price-old">$${Number(p.old_price).toLocaleString('es-AR')}</span>` : ''}${p.transfer_price ? `<span class="product-price-transfer" title="Precio abonando por transferencia"><span class="transfer-tag">Transf.</span> $${Number(p.transfer_price).toLocaleString('es-AR')}</span>` : ''}</div><button class="btn-add-cart${ic ? ' in-cart' : ''}" onclick="event.stopPropagation(); addToCart(${p.id})">${ic ? '✓ En el carrito' : 'Agregar al carrito'}</button></div></article>`;
+    const priceWrapHtml = isConsult
+        ? `<div class="product-price-wrap"><span class="product-price product-price-consult">Consultar</span></div>`
+        : `<div class="product-price-wrap"><span class="product-price">$${Number(p.price).toLocaleString('es-AR')}</span>${p.old_price ? `<span class="product-price-old">$${Number(p.old_price).toLocaleString('es-AR')}</span>` : ''}${p.transfer_price ? `<span class="product-price-transfer" title="Precio abonando por transferencia"><span class="transfer-tag">Transf.</span> $${Number(p.transfer_price).toLocaleString('es-AR')}</span>` : ''}</div>`;
+    const btnActionHtml = isConsult
+        ? `<button class="btn-add-cart${ic ? ' in-cart' : ''}" onclick="event.stopPropagation(); openProductDetail(${p.id})">${ic ? '✓ En consulta' : 'Consultar'}</button>`
+        : `<button class="btn-add-cart${ic ? ' in-cart' : ''}" onclick="event.stopPropagation(); addToCart(${p.id})">${ic ? '✓ En el carrito' : 'Agregar al carrito'}</button>`;
+    return `<article class="product-card" onclick="if(_isSwiping) return; openProductDetail(${p.id})"><div class="product-img-wrap" onclick="if(_isSwiping) { event.stopPropagation(); return; } openProductDetail(${p.id})">${imgContent}${p.badge ? `<span class="product-badge ${p.badge}">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}<button class="product-wishlist" onclick="event.stopPropagation();showToast('💖','Agregado a favoritos')">♡</button></div><div class="product-info"><div class="product-category">${getCatName(p.category_slug || p.category)}</div><div class="product-name" style="cursor:pointer">${p.name}</div>${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-bottom:0.4rem;line-height:1.4">${p.description}</div>` : ''}${priceWrapHtml}${btnActionHtml}</div></article>`;
 }
 
 let _touchStartX = 0;
@@ -271,6 +302,7 @@ function openProductDetail(id) {
     const detailModal = document.getElementById('productDetailModal');
     const detailContent = document.getElementById('productDetailContent');
     const ic = cart.find(i => i.id === p.id);
+    const isConsult = !p.price || Number(p.price) <= 0;
     let urls = Array.isArray(p.image_urls) && p.image_urls.length > 0 ? p.image_urls : (p.image_url ? [p.image_url] : []);
     let imgHtml = '';
     const cx = 'det-';
@@ -281,7 +313,37 @@ function openProductDetail(id) {
     } else {
         imgHtml = `<div style="font-size:4rem">📦</div>`;
     }
-    detailContent.innerHTML = `<div class="product-detail-grid"><div class="product-detail-img-side">${imgHtml}${p.badge ? `<span class="product-badge ${p.badge}" style="top:1.5rem; left:1.5rem">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}</div><div class="product-detail-info-side"><div class="product-detail-cat">${getCatName(p.category_slug || p.category)}</div><h2 class="product-detail-name">${p.name}</h2><div class="product-detail-price-row"><span class="product-detail-price">$${Number(p.price).toLocaleString('es-AR')}</span>${p.old_price ? `<span class="product-detail-old-price">$${Number(p.old_price).toLocaleString('es-AR')}</span>` : ''}${p.transfer_price ? `<span class="product-detail-price-transfer" title="Precio abonando por transferencia"><span class="transfer-tag">Transf.</span> $${Number(p.transfer_price).toLocaleString('es-AR')}</span>` : ''}</div><div class="product-detail-desc">${p.description || 'Sin descripción disponible para este producto.'}</div><div class="product-detail-actions"><button class="btn-primary" onclick="addToCart(${p.id}); closeProductDetail()" style="width:100%; padding: 1.2rem;">${ic ? '✓ En el carrito (Sumar otro)' : 'Agregar al carrito'}</button><p style="font-size: 0.75rem; color: var(--gray); text-align: center; font-family: var(--font-ui); letter-spacing: 0.05em;">✨ Envío a todo el país | ✨ Atención personalizada</p></div></div></div>`;
+
+    const priceRowHtml = isConsult
+        ? `<div class="product-detail-price-row"><span class="product-detail-price product-detail-price-consult">Consultar</span></div>`
+        : `<div class="product-detail-price-row"><span class="product-detail-price">$${Number(p.price).toLocaleString('es-AR')}</span>${p.old_price ? `<span class="product-detail-old-price">$${Number(p.old_price).toLocaleString('es-AR')}</span>` : ''}${p.transfer_price ? `<span class="product-detail-price-transfer" title="Precio abonando por transferencia"><span class="transfer-tag">Transf.</span> $${Number(p.transfer_price).toLocaleString('es-AR')}</span>` : ''}</div>`;
+
+    let actionsHtml = '';
+    if (isConsult) {
+        const waUrl = getProductWhatsAppUrl(p);
+        actionsHtml = `
+            <a href="${waUrl}" target="_blank" rel="noopener" class="btn-primary btn-consult-wa" style="width:100%; padding: 1.1rem; text-decoration:none; margin-bottom:0.6rem;">
+                💬 Consultar por WhatsApp
+            </a>
+            <button class="btn-outline" onclick="addToCart(${p.id}); closeProductDetail()" style="width:100%; padding: 0.85rem; font-size: 0.65rem;">
+                ${ic ? '✓ En lista de consulta' : '+ Agregar al pedido (A cotizar)'}
+            </button>
+            <p style="font-size: 0.75rem; color: var(--gray); text-align: center; font-family: var(--font-ui); letter-spacing: 0.05em; margin-top: 0.8rem;">
+                ✨ El precio se acordará según diseño y personalización.
+            </p>
+        `;
+    } else {
+        actionsHtml = `
+            <button class="btn-primary" onclick="addToCart(${p.id}); closeProductDetail()" style="width:100%; padding: 1.2rem;">
+                ${ic ? '✓ En el carrito (Sumar otro)' : 'Agregar al carrito'}
+            </button>
+            <p style="font-size: 0.75rem; color: var(--gray); text-align: center; font-family: var(--font-ui); letter-spacing: 0.05em;">
+                ✨ Envío a todo el país | ✨ Atención personalizada
+            </p>
+        `;
+    }
+
+    detailContent.innerHTML = `<div class="product-detail-grid"><div class="product-detail-img-side">${imgHtml}${p.badge ? `<span class="product-badge ${p.badge}" style="top:1.5rem; left:1.5rem">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}</div><div class="product-detail-info-side"><div class="product-detail-cat">${getCatName(p.category_slug || p.category)}</div><h2 class="product-detail-name">${p.name}</h2>${priceRowHtml}<div class="product-detail-desc">${p.description || 'Sin descripción disponible para este producto.'}</div><div class="product-detail-actions">${actionsHtml}</div></div></div>`;
     detailModal.classList.add('open');
     document.body.style.overflow = 'hidden';
 }
@@ -318,16 +380,30 @@ function filterProducts(cat, btn) {
 }
 function sortProducts(val) {
     let list = activeFilter === 'all' ? [...allProds] : allProds.filter(p => (p.category_slug || p.category) === activeFilter);
-    if (val === 'price-asc') list.sort((a, b) => a.price - b.price);
-    else if (val === 'price-desc') list.sort((a, b) => b.price - a.price);
-    else if (val === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
+    if (val === 'price-asc') {
+        list.sort((a, b) => {
+            const pA = a.price && a.price > 0 ? Number(a.price) : 999999999;
+            const pB = b.price && b.price > 0 ? Number(b.price) : 999999999;
+            return pA - pB;
+        });
+    } else if (val === 'price-desc') {
+        list.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+    } else if (val === 'name') {
+        list.sort((a, b) => a.name.localeCompare(b.name));
+    }
     const el = document.getElementById('allProductsGrid'); if (el) el.innerHTML = list.map(productCard).join('');
 }
 
 // ===== CART =====
 function addToCart(id) {
     const p = allProds.find(x => x.id == id); if (!p) return;
-    const ex = cart.find(i => i.id == id); if (ex) ex.qty++; else cart.push({ id: p.id, name: p.name, price: p.price, emoji: p.emoji || '📦', qty: 1 });
+    const isConsult = !p.price || Number(p.price) <= 0;
+    const ex = cart.find(i => i.id == id);
+    if (ex) {
+        ex.qty++;
+    } else {
+        cart.push({ id: p.id, name: p.name, price: isConsult ? 0 : Number(p.price), isConsult: isConsult, emoji: p.emoji || '📦', qty: 1 });
+    }
     localStorage.setItem('rochi_cart', JSON.stringify(cart)); updateCartBadge(); renderCartItems();
     showToast('🛒', `"${p.name}" agregado al carrito`);
     if (currentPage === 'home') renderFeaturedProducts();
@@ -338,8 +414,15 @@ function renderCartItems() {
     const el = document.getElementById('cartItemsEl'), footer = document.getElementById('cartFooter'); if (!el) return;
     if (!cart.length) { el.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛒</div><p style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:.5rem">Tu carrito está vacío</p><p style="font-size:.9rem;color:var(--gray-light)">Agregá productos para comenzar</p></div>`; if (footer) footer.style.display = 'none'; return; }
     if (footer) footer.style.display = 'block';
-    el.innerHTML = cart.map(item => `<div class="cart-item"><div class="cart-item-img">${item.emoji}</div><div><div class="cart-item-name">${item.name}</div><div class="cart-item-price">$${(item.price * item.qty).toLocaleString('es-AR')}</div><div class="cart-item-qty"><button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button><span class="qty-num">${item.qty}</span><button class="qty-btn" onclick="changeQty(${item.id},1)">+</button></div></div><button class="cart-remove" onclick="removeFromCart(${item.id})">✕</button></div>`).join('');
-    const totalEl = document.getElementById('cartTotalEl'); if (totalEl) totalEl.textContent = '$' + cart.reduce((s, i) => s + i.price * i.qty, 0).toLocaleString('es-AR');
+    el.innerHTML = cart.map(item => {
+        const isConsult = item.isConsult || !item.price || item.price <= 0;
+        const priceDisplay = isConsult ? `<span style="color:var(--pink-deep);font-style:italic;font-size:0.75rem">Consultar</span>` : `$${((item.price || 0) * item.qty).toLocaleString('es-AR')}`;
+        return `<div class="cart-item"><div class="cart-item-img">${item.emoji}</div><div><div class="cart-item-name">${item.name}</div><div class="cart-item-price">${priceDisplay}</div><div class="cart-item-qty"><button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button><span class="qty-num">${item.qty}</span><button class="qty-btn" onclick="changeQty(${item.id},1)">+</button></div></div><button class="cart-remove" onclick="removeFromCart(${item.id})">✕</button></div>`;
+    }).join('');
+    const hasConsult = cart.some(i => i.isConsult || !i.price || i.price <= 0);
+    const sum = cart.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
+    const totalEl = document.getElementById('cartTotalEl');
+    if (totalEl) totalEl.innerHTML = `$${sum.toLocaleString('es-AR')}${hasConsult ? ' <small style="font-size:0.7rem;font-weight:normal;color:var(--gray)">(+ a cotizar)</small>' : ''}`;
 }
 function changeQty(id, d) { const item = cart.find(i => i.id == id); if (!item) return; item.qty += d; if (item.qty <= 0) cart = cart.filter(i => i.id != id); localStorage.setItem('rochi_cart', JSON.stringify(cart)); updateCartBadge(); renderCartItems(); }
 function removeFromCart(id) { cart = cart.filter(i => i.id != id); localStorage.setItem('rochi_cart', JSON.stringify(cart)); updateCartBadge(); renderCartItems(); showToast('✕', 'Producto eliminado del carrito'); }
@@ -352,9 +435,14 @@ function renderCheckout() {
     const cc = document.getElementById('checkoutContent'), cs = document.getElementById('checkoutSuccess');
     if (cc) cc.classList.remove('hidden'); if (cs) cs.classList.add('hidden');
     if (!cart.length) { if (cc) cc.innerHTML = `<div style="text-align:center;padding:4rem 2rem"><p style="font-family:var(--font-display);font-size:1.5rem;color:var(--gray)">Tu carrito está vacío.</p><button class="btn-primary" style="border:none;margin-top:1.5rem" onclick="showPage('products',null)">Ver Productos</button></div>`; return; }
-    const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const hasConsult = cart.some(i => i.isConsult || !i.price || i.price <= 0);
+    const total = cart.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
     const ln = currentUser?.user_metadata?.full_name || '', le = currentUser?.email || '';
-    if (cc) cc.innerHTML = `<div class="checkout-page"><div class="checkout-grid"><div><div class="checkout-section-title">Tus datos</div><div class="form-group"><label class="form-label">Nombre completo *</label><input class="form-input" id="chkName" type="text" value="${ln}" placeholder="Tu nombre y apellido"></div><div class="form-group"><label class="form-label">Email *</label><input class="form-input" id="chkEmail" type="email" value="${le}" placeholder="tucorreo@email.com"></div><div class="form-group"><label class="form-label">Teléfono / WhatsApp *</label><input class="form-input" id="chkPhone" type="tel" placeholder="+54 9 11 0000-0000"></div><div class="form-group"><label class="form-label">Dirección de entrega</label><input class="form-input" id="chkAddress" type="text" placeholder="Calle, número, ciudad"></div><div class="form-group"><label class="form-label">Método de pago preferido *</label><select class="form-input" id="chkPayment"><option value="">Seleccioná una opción</option><option value="Débito">Débito</option><option value="Crédito">Crédito</option><option value="Transferencia">Transferencia</option><option value="Link de pago">Link de pago</option><option value="Efectivo">Efectivo</option></select></div></div><div><div class="checkout-section-title">Notas adicionales</div><div class="form-group"><label class="form-label">Notas del pedido (opcional)</label><textarea class="form-input" id="chkNotes" rows="4" placeholder="Indicaciones especiales..."></textarea></div><div style="background:var(--pink-pale);padding:1rem;border:1px solid var(--pink-light);margin-top:1rem"><p style="font-family:var(--font-ui);font-size:.66rem;color:var(--gray);line-height:1.7">📌 <strong>IMPORTANTE:</strong> Este formulario confirma tu pedido. Nos contactaremos por WhatsApp para coordinar el pago y envío. No requiere pago online.</p></div></div><div style="grid-column:1/-1"><div class="checkout-section-title">Resumen del pedido</div>${cart.map(item => `<div class="checkout-item-row"><div class="checkout-item-icon">${item.emoji}</div><div class="checkout-item-name">${item.name}</div><div class="checkout-item-qty">× ${item.qty}</div><div class="checkout-item-price">$${(item.price * item.qty).toLocaleString('es-AR')}</div></div>`).join('')}<div class="checkout-total-row"><span>Total estimado</span><span>$${total.toLocaleString('es-AR')}</span></div></div></div><button class="btn-confirm" id="confirmBtn" onclick="submitOrder()">Confirmar y Enviar Pedido →</button></div>`;
+    if (cc) cc.innerHTML = `<div class="checkout-page"><div class="checkout-grid"><div><div class="checkout-section-title">Tus datos</div><div class="form-group"><label class="form-label">Nombre completo *</label><input class="form-input" id="chkName" type="text" value="${ln}" placeholder="Tu nombre y apellido"></div><div class="form-group"><label class="form-label">Email *</label><input class="form-input" id="chkEmail" type="email" value="${le}" placeholder="tucorreo@email.com"></div><div class="form-group"><label class="form-label">Teléfono / WhatsApp *</label><input class="form-input" id="chkPhone" type="tel" placeholder="+54 9 11 0000-0000"></div><div class="form-group"><label class="form-label">Dirección de entrega</label><input class="form-input" id="chkAddress" type="text" placeholder="Calle, número, ciudad"></div><div class="form-group"><label class="form-label">Método de pago preferido *</label><select class="form-input" id="chkPayment"><option value="">Seleccioná una opción</option><option value="Débito">Débito</option><option value="Crédito">Crédito</option><option value="Transferencia">Transferencia</option><option value="Link de pago">Link de pago</option><option value="Efectivo">Efectivo</option></select></div></div><div><div class="checkout-section-title">Notas adicionales</div><div class="form-group"><label class="form-label">Notas del pedido (opcional)</label><textarea class="form-input" id="chkNotes" rows="4" placeholder="Indicaciones especiales..."></textarea></div><div style="background:var(--pink-pale);padding:1rem;border:1px solid var(--pink-light);margin-top:1rem"><p style="font-family:var(--font-ui);font-size:.66rem;color:var(--gray);line-height:1.7">📌 <strong>IMPORTANTE:</strong> Este formulario confirma tu pedido. Nos contactaremos por WhatsApp para coordinar el pago y envío. No requiere pago online.</p></div></div><div style="grid-column:1/-1"><div class="checkout-section-title">Resumen del pedido</div>${cart.map(item => {
+        const isConsult = item.isConsult || !item.price || item.price <= 0;
+        const priceText = isConsult ? `<span style="color:var(--pink-deep);font-style:italic">Consultar</span>` : `$${((item.price || 0) * item.qty).toLocaleString('es-AR')}`;
+        return `<div class="checkout-item-row"><div class="checkout-item-icon">${item.emoji}</div><div class="checkout-item-name">${item.name}</div><div class="checkout-item-qty">× ${item.qty}</div><div class="checkout-item-price">${priceText}</div></div>`;
+    }).join('')}<div class="checkout-total-row"><span>Total estimado</span><span>$${total.toLocaleString('es-AR')}${hasConsult ? ' <small style="font-size:0.75rem;font-weight:normal;color:var(--gray)">(+ a cotizar)</small>' : ''}</span></div></div></div><button class="btn-confirm" id="confirmBtn" onclick="submitOrder()">Confirmar y Enviar Pedido →</button></div>`;
 }
 async function submitOrder() {
     const name = document.getElementById('chkName')?.value.trim();
@@ -442,7 +530,12 @@ function handleSearch(q) {
     const el = document.getElementById('searchResults'); if (!el) return; if (q.length < 2) { el.innerHTML = ''; return; }
     const res = allProds.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || getCatName(p.category_slug || p.category).toLowerCase().includes(q.toLowerCase()));
     if (!res.length) { el.innerHTML = `<p style="font-family:var(--font-ui);font-size:.75rem;color:var(--gray);text-align:center;letter-spacing:.1em">Sin resultados para "${q}"</p>`; return; }
-    el.innerHTML = res.slice(0, 6).map(p => `<div onclick="addToCart(${p.id});toggleSearch()" style="display:flex;align-items:center;gap:1rem;padding:.8rem;background:rgba(255,255,255,.85);margin-bottom:.4rem;cursor:pointer;border:1px solid var(--pink-light)" onmouseover="this.style.background='var(--pink-pale)'" onmouseout="this.style.background='rgba(255,255,255,.85)'"><span style="font-size:1.8rem">${p.emoji || '📦'}</span><div style="flex:1"><div style="font-family:var(--font-display);font-size:.95rem;font-weight:600">${p.name}</div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--gray);text-transform:uppercase;letter-spacing:.1em">${getCatName(p.category_slug || p.category)}</div></div><span style="font-family:var(--font-ui);font-weight:600">$${Number(p.price).toLocaleString('es-AR')}</span></div>`).join('');
+    el.innerHTML = res.slice(0, 6).map(p => {
+        const isConsult = !p.price || Number(p.price) <= 0;
+        const priceDisplay = isConsult ? '<span style="color:var(--pink-deep);font-style:italic">Consultar</span>' : '$' + Number(p.price).toLocaleString('es-AR');
+        const clickAction = isConsult ? `openProductDetail(${p.id});toggleSearch()` : `addToCart(${p.id});toggleSearch()`;
+        return `<div onclick="${clickAction}" style="display:flex;align-items:center;gap:1rem;padding:.8rem;background:rgba(255,255,255,.85);margin-bottom:.4rem;cursor:pointer;border:1px solid var(--pink-light)" onmouseover="this.style.background='var(--pink-pale)'" onmouseout="this.style.background='rgba(255,255,255,.85)'"><span style="font-size:1.8rem">${p.emoji || '📦'}</span><div style="flex:1"><div style="font-family:var(--font-display);font-size:.95rem;font-weight:600">${p.name}</div><div style="font-family:var(--font-ui);font-size:.62rem;color:var(--gray);text-transform:uppercase;letter-spacing:.1em">${getCatName(p.category_slug || p.category)}</div></div><span style="font-family:var(--font-ui);font-weight:600">${priceDisplay}</span></div>`;
+    }).join('');
 }
 
 // ===== ADMIN =====
@@ -523,19 +616,59 @@ async function updateProductBadge(id, newBadge) {
 let currentEditImages = [];
 let pendingUploadFiles = [];
 
+function toggleNoPriceCheckbox(checked) {
+    const pr = document.getElementById('pPrice');
+    const pt = document.getElementById('pTransferPrice');
+    const op = document.getElementById('pOldPrice');
+    const lblPr = document.getElementById('lblProductPrice');
+    const lblPt = document.getElementById('lblProductTransferPrice');
+    const lblOp = document.getElementById('lblProductOldPrice');
+
+    if (pr) {
+        pr.disabled = checked;
+        if (checked) { pr.value = ''; pr.placeholder = 'A consultar'; }
+        else { pr.placeholder = '2500'; }
+    }
+    if (pt) {
+        pt.disabled = checked;
+        if (checked) { pt.value = ''; pt.placeholder = 'No aplica'; }
+        else { pt.placeholder = '2200'; }
+    }
+    if (op) {
+        op.disabled = checked;
+        if (checked) { op.value = ''; op.placeholder = 'No aplica'; }
+        else { op.placeholder = '3000'; }
+    }
+
+    if (lblPr) lblPr.innerHTML = checked ? 'Precio regular <span style="color:var(--gray);font-weight:normal">(No aplica)</span>' : 'Precio regular *';
+    if (lblPt) lblPt.innerHTML = checked ? 'Precio transferencia <span style="color:var(--gray);font-weight:normal">(No aplica)</span>' : 'Precio transferencia (opcional)';
+    if (lblOp) lblOp.innerHTML = checked ? 'Precio anterior <span style="color:var(--gray);font-weight:normal">(No aplica)</span>' : 'Precio anterior (opcional)';
+}
+
 function openProductForm(product = null) {
     const wrap = document.getElementById('productFormWrap'); if (!wrap) return;
     const ti = document.getElementById('productFormTitle'); if (ti) ti.textContent = product ? 'Editar Producto' : 'Nuevo Producto';
     const idEl = document.getElementById('productEditId'); if (idEl) idEl.value = product?.id || '';
     const na = document.getElementById('pName'); if (na) na.value = product?.name || '';
-    const pr = document.getElementById('pPrice'); if (pr) pr.value = product?.price || '';
-    const pt = document.getElementById('pTransferPrice'); if (pt) pt.value = product?.transfer_price || '';
-    const op = document.getElementById('pOldPrice'); if (op) op.value = product?.old_price || '';
     const de = document.getElementById('pDesc'); if (de) de.value = product?.description || '';
     const ba = document.getElementById('pBadge'); if (ba) ba.value = product?.badge || '';
     const catSel = document.getElementById('pCategory');
     if (catSel) catSel.innerHTML = allCats.map(c => `<option value="${c.slug}"${(product?.category_slug || product?.category) === c.slug ? ' selected' : ''}>${c.name}</option>`).join('');
     const fi = document.getElementById('pImageFile'); if (fi) fi.value = '';
+
+    const isNoPrice = product ? (!product.price || Number(product.price) <= 0) : false;
+    const noPriceCb = document.getElementById('pNoPrice');
+    if (noPriceCb) noPriceCb.checked = isNoPrice;
+    toggleNoPriceCheckbox(isNoPrice);
+
+    const pr = document.getElementById('pPrice');
+    const pt = document.getElementById('pTransferPrice');
+    const op = document.getElementById('pOldPrice');
+    if (!isNoPrice) {
+        if (pr) pr.value = (product?.price && Number(product.price) > 0) ? product.price : '';
+        if (pt) pt.value = product?.transfer_price || '';
+        if (op) op.value = product?.old_price || '';
+    }
 
     currentEditImages = Array.isArray(product?.image_urls) ? [...product.image_urls] : (product?.image_url ? [product.image_url] : []);
     pendingUploadFiles = [];
@@ -588,12 +721,24 @@ async function saveProduct() {
     const editId = document.getElementById('productEditId')?.value;
     const name = document.getElementById('pName')?.value.trim();
     const category_slug = document.getElementById('pCategory')?.value;
-    const price = Number(document.getElementById('pPrice')?.value);
-    const transfer_price = document.getElementById('pTransferPrice')?.value ? Number(document.getElementById('pTransferPrice').value) : null;
-    const old_price = document.getElementById('pOldPrice')?.value ? Number(document.getElementById('pOldPrice').value) : null;
+    const isNoPrice = document.getElementById('pNoPrice')?.checked;
+
+    let price = 0;
+    let transfer_price = null;
+    let old_price = null;
+
+    if (!isNoPrice) {
+        price = Number(document.getElementById('pPrice')?.value);
+        transfer_price = document.getElementById('pTransferPrice')?.value ? Number(document.getElementById('pTransferPrice').value) : null;
+        old_price = document.getElementById('pOldPrice')?.value ? Number(document.getElementById('pOldPrice').value) : null;
+    }
+
     const description = document.getElementById('pDesc')?.value.trim();
     const badge = document.getElementById('pBadge')?.value || null;
-    if (!name || !category_slug || !price) { showToast('⚠️', 'Completá los campos obligatorios'); return; }
+    if (!name || !category_slug || (!isNoPrice && (!price || price <= 0))) {
+        showToast('⚠️', 'Completá los campos obligatorios');
+        return;
+    }
 
     const btn = document.querySelector('#productFormWrap .btn-primary');
     let orgTxt = btn ? btn.innerHTML : '';
@@ -614,7 +759,7 @@ async function saveProduct() {
         if (!error) { const idx = allProds.findIndex(p => String(p.id) === String(editId)); if (idx > -1) allProds[idx] = { ...allProds[idx], ...payload, id: Number(editId) }; }
     } else {
         const { data, error: e } = await db.from('products').insert(payload).select().single();
-        error = e; if (!error && data) allProds.push({ ...data, transfer_price: data.transfer_price ? Number(data.transfer_price) : null }); else if (!error) allProds.push({ ...payload, id: Date.now() });
+        error = e; if (!error && data) allProds.push({ ...data, price: Number(data.price || 0), transfer_price: data.transfer_price ? Number(data.transfer_price) : null }); else if (!error) allProds.push({ ...payload, id: Date.now() });
     }
     if (btn) { btn.innerHTML = orgTxt; btn.disabled = false; }
     if (error) { showToast('❌', 'Error: ' + error.message); return; }
@@ -637,7 +782,13 @@ function renderAdminProducts() {
         if (vA < vB) return adminSortDir === 'asc' ? -1 : 1; if (vA > vB) return adminSortDir === 'asc' ? 1 : -1; return 0;
     });
     const getSortIcon = (key) => adminSortKey === key ? (adminSortDir === 'asc' ? ' ▴' : ' ▾') : '';
-    el.innerHTML = `<table class="admin-table"><thead><tr><th>Emoji/Img</th><th onclick="sortAdminTable('name')" style="cursor:pointer">Nombre${getSortIcon('name')}</th><th onclick="sortAdminTable('category')" style="cursor:pointer">Categoría${getSortIcon('category')}</th><th onclick="sortAdminTable('price')" style="cursor:pointer">Precio${getSortIcon('price')}</th><th onclick="sortAdminTable('transfer_price')" style="cursor:pointer">Precio transf.${getSortIcon('transfer_price')}</th><th onclick="sortAdminTable('old_price')" style="cursor:pointer">Precio ant.${getSortIcon('old_price')}</th><th onclick="sortAdminTable('badge')" style="cursor:pointer">Badge${getSortIcon('badge')}</th><th>Acciones</th></tr></thead><tbody>${sorted.map(p => `<tr><td>${p.image_url ? `<img src="${p.image_url}" style="width:30px;height:30px;object-fit:cover;border-radius:4px">` : p.emoji || '📦'}</td><td><strong>${p.name}</strong></td><td>${getCatName(p.category_slug || p.category)}</td><td>$${Number(p.price).toLocaleString('es-AR')}</td><td>${p.transfer_price ? '$' + Number(p.transfer_price).toLocaleString('es-AR') : '—'}</td><td>${p.old_price ? '$' + Number(p.old_price).toLocaleString('es-AR') : '—'}</td><td><select onchange="updateProductBadge('${p.id}', this.value)" class="admin-badge-select ${p.badge || ''}"><option value="">— Sin —</option><option value="new" ${p.badge === 'new' ? 'selected' : ''}>Nuevo</option><option value="offer" ${p.badge === 'offer' ? 'selected' : ''}>Oferta</option><option value="hot" ${p.badge === 'hot' ? 'selected' : ''}>Destacado</option></select></td><td><div class="crud-actions"><button class="btn-edit" onclick="openProductForm(allProds.find(x=>String(x.id)===String(${p.id})))">✏️</button><button class="btn-delete" onclick="deleteProduct(${p.id})">🗑️</button></div></td></tr>`).join('')}</tbody></table>`;
+    el.innerHTML = `<table class="admin-table"><thead><tr><th>Emoji/Img</th><th onclick="sortAdminTable('name')" style="cursor:pointer">Nombre${getSortIcon('name')}</th><th onclick="sortAdminTable('category')" style="cursor:pointer">Categoría${getSortIcon('category')}</th><th onclick="sortAdminTable('price')" style="cursor:pointer">Precio${getSortIcon('price')}</th><th onclick="sortAdminTable('transfer_price')" style="cursor:pointer">Precio transf.${getSortIcon('transfer_price')}</th><th onclick="sortAdminTable('old_price')" style="cursor:pointer">Precio ant.${getSortIcon('old_price')}</th><th onclick="sortAdminTable('badge')" style="cursor:pointer">Badge${getSortIcon('badge')}</th><th>Acciones</th></tr></thead><tbody>${sorted.map(p => {
+        const isConsult = !p.price || Number(p.price) <= 0;
+        const priceDisplay = isConsult ? '<span class="admin-badge-consult">Consultar</span>' : '$' + Number(p.price).toLocaleString('es-AR');
+        const transferDisplay = (!isConsult && p.transfer_price) ? '$' + Number(p.transfer_price).toLocaleString('es-AR') : '—';
+        const oldPriceDisplay = (!isConsult && p.old_price) ? '$' + Number(p.old_price).toLocaleString('es-AR') : '—';
+        return `<tr><td>${p.image_url ? `<img src="${p.image_url}" style="width:30px;height:30px;object-fit:cover;border-radius:4px">` : p.emoji || '📦'}</td><td><strong>${p.name}</strong></td><td>${getCatName(p.category_slug || p.category)}</td><td>${priceDisplay}</td><td>${transferDisplay}</td><td>${oldPriceDisplay}</td><td><select onchange="updateProductBadge('${p.id}', this.value)" class="admin-badge-select ${p.badge || ''}"><option value="">— Sin —</option><option value="new" ${p.badge === 'new' ? 'selected' : ''}>Nuevo</option><option value="offer" ${p.badge === 'offer' ? 'selected' : ''}>Oferta</option><option value="hot" ${p.badge === 'hot' ? 'selected' : ''}>Destacado</option></select></td><td><div class="crud-actions"><button class="btn-edit" onclick="openProductForm(allProds.find(x=>String(x.id)===String(${p.id})))">✏️</button><button class="btn-delete" onclick="deleteProduct(${p.id})">🗑️</button></div></td></tr>`;
+    }).join('')}</tbody></table>`;
 }
 
 // --- ADMIN CATEGORIES ---

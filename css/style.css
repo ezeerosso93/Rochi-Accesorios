@@ -2616,3 +2616,106 @@ nav a.active {
     aspect-ratio: 1/1;
   }
 }
+
+/* ===================================================
+   PRODUCTOS SIN PRECIO FIJO ("CONSULTAR")
+   =================================================== */
+.product-price-consult {
+  color: var(--pink-deep) !important;
+  font-family: var(--font-display) !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+  font-style: italic;
+}
+
+.product-detail-price-consult {
+  color: var(--pink-deep) !important;
+  font-family: var(--font-display) !important;
+  font-size: 1.85rem !important;
+  font-weight: 700 !important;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+.admin-badge-consult {
+  display: inline-block;
+  padding: 0.22rem 0.65rem;
+  font-size: 0.68rem;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--pink-pale);
+  color: var(--pink-deep);
+  border: 1px solid var(--pink-mid);
+  border-radius: 4px;
+}
+
+.no-price-check-wrap {
+  background: var(--pink-pale);
+  border: 1px dashed var(--pink-mid);
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+  transition: var(--transition);
+}
+
+.no-price-check-wrap:hover {
+  background: #fdf0f3;
+  border-color: var(--pink-deep);
+}
+
+.no-price-check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  color: var(--black);
+  margin-bottom: 0;
+}
+
+.no-price-check-label input[type="checkbox"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--pink-deep);
+  cursor: pointer;
+}
+
+.no-price-check-hint {
+  font-size: 0.72rem;
+  color: var(--gray);
+  font-family: var(--font-ui);
+  margin-top: 0.35rem;
+  margin-left: 1.8rem;
+  line-height: 1.35;
+}
+
+.form-input:disabled {
+  background-color: #f6f6f6 !important;
+  color: #888 !important;
+  cursor: not-allowed !important;
+  border-color: #e5e5e5 !important;
+  opacity: 0.75;
+}
+
+.btn-consult-wa {
+  background: #25d366 !important;
+  color: #ffffff !important;
+  border: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition: var(--transition);
+  text-decoration: none;
+}
+
+.btn-consult-wa:hover {
+  background: #1ebc59 !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+}
