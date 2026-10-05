@@ -86,6 +86,7 @@ async function loadProdsFromDB() {
     }));
     renderFeaturedProducts();
     if (currentPage === 'products') renderAllProducts();
+    checkUrlProduct();
 }
 function refreshCategoryUI() {
     renderCatStrip(); renderNavDropdown(); renderFilterTabs(); renderFooterCats();
@@ -252,7 +253,7 @@ function productCard(p) {
         : `<button class="btn-add-cart${ic ? ' in-cart' : ''}" onclick="event.stopPropagation(); addToCart(${p.id})">${ic ? '✓ En el carrito' : 'Agregar al carrito'}</button>`;
     const badgeLabel = p.badge === 'new' ? 'Nuevo' : (p.badge === 'hot' ? 'Destacado' : '');
     const badgeHtml = badgeLabel ? `<span class="product-badge ${p.badge}">${badgeLabel}</span>` : '';
-    return `<article class="product-card" onclick="if(_isSwiping) return; openProductDetail(${p.id})"><div class="product-img-wrap" onclick="if(_isSwiping) { event.stopPropagation(); return; } openProductDetail(${p.id})">${imgContent}${badgeHtml}<button class="product-wishlist" onclick="event.stopPropagation();showToast('💖','Agregado a favoritos')">♡</button></div><div class="product-info"><div class="product-category">${getCatName(p.category_slug || p.category)}</div><div class="product-name" style="cursor:pointer">${p.name}</div>${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-bottom:0.4rem;line-height:1.4">${p.description}</div>` : ''}${priceWrapHtml}${btnActionHtml}</div></article>`;
+    return `<article class="product-card" onclick="if(_isSwiping) return; openProductDetail(${p.id})"><div class="product-img-wrap" onclick="if(_isSwiping) { event.stopPropagation(); return; } openProductDetail(${p.id})">${imgContent}${badgeHtml}<div class="product-card-actions"><button class="product-wishlist" title="Guardar en favoritos" onclick="event.stopPropagation();showToast('💖','Agregado a favoritos')">♡</button><button class="product-share-btn" title="Copiar enlace o compartir" onclick="event.stopPropagation();shareProduct(${p.id})">🔗</button></div></div><div class="product-info"><div class="product-category">${getCatName(p.category_slug || p.category)}</div><a href="?p=${p.id}" class="product-name" onclick="if(_isSwiping){event.preventDefault();return;} event.preventDefault(); openProductDetail(${p.id})">${p.name}</a>${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-bottom:0.4rem;line-height:1.4">${p.description}</div>` : ''}${priceWrapHtml}${btnActionHtml}</div></article>`;
 }
 
 let _touchStartX = 0;
@@ -311,12 +312,59 @@ function setCarousel(key, idx) {
     Array.from(dots).forEach((d, i) => d.classList.toggle('active', i === idx));
 }
 
-function openProductDetail(id) {
-    const p = allProds.find(x => x.id == id);
+function getProductShareUrl(id) {
+    const loc = window.location;
+    return `${loc.origin}${loc.pathname}?p=${id}`;
+}
+
+async function shareProduct(id) {
+    const p = allProds.find(x => String(x.id) === String(id));
     if (!p) return;
+    const shareUrl = getProductShareUrl(p.id);
+    const title = `${p.name} | Rochi Accesorios`;
+    const text = `Mirá "${p.name}" en Rochi Accesorios:`;
+
+    if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
+        try {
+            await navigator.share({ title, text, url: shareUrl });
+            return;
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+        }
+    }
+
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(shareUrl);
+        } else {
+            const ta = document.createElement('textarea');
+            ta.value = shareUrl;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+        showToast('🔗', '¡Link copiado al portapapeles!');
+    } catch (e) {
+        prompt('Copiá este enlace para compartir:', shareUrl);
+    }
+}
+
+function openProductDetail(id, updateHistory = true) {
+    const p = allProds.find(x => String(x.id) === String(id));
+    if (!p) return;
+
+    if (updateHistory) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('p', id);
+        history.pushState({ productId: id }, '', url.toString());
+    }
+
     const detailModal = document.getElementById('productDetailModal');
     const detailContent = document.getElementById('productDetailContent');
-    const ic = cart.find(i => i.id === p.id);
+    const ic = cart.find(i => String(i.id) === String(p.id));
     const isConsult = !p.price || Number(p.price) <= 0;
     let urls = Array.isArray(p.image_urls) && p.image_urls.length > 0 ? p.image_urls : (p.image_url ? [p.image_url] : []);
     let imgHtml = '';
@@ -333,6 +381,11 @@ function openProductDetail(id) {
         ? `<div class="product-detail-price-row"><span class="product-detail-price product-detail-price-consult">Consultar</span></div>`
         : `<div class="product-detail-price-row"><span class="product-detail-price">$${Number(p.price).toLocaleString('es-AR')}</span>${p.old_price ? `<span class="product-detail-old-price">$${Number(p.old_price).toLocaleString('es-AR')}</span>` : ''}${p.transfer_price ? `<span class="product-detail-price-transfer" title="Precio abonando por transferencia"><span class="transfer-tag">Transf.</span> $${Number(p.transfer_price).toLocaleString('es-AR')}</span>` : ''}</div>`;
 
+    const shareBtnHtml = `
+        <button class="btn-share-modal" onclick="shareProduct(${p.id})" style="width:100%; padding: 0.85rem; margin-top: 0.5rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase;">
+            <span>🔗</span> Compartir Producto
+        </button>
+    `;
     let actionsHtml = '';
     if (isConsult) {
         const waUrl = getProductWhatsAppUrl(p);
@@ -343,6 +396,7 @@ function openProductDetail(id) {
             <button class="btn-outline" onclick="addToCart(${p.id}); closeProductDetail()" style="width:100%; padding: 0.85rem; font-size: 0.65rem;">
                 ${ic ? '✓ En lista de consulta' : '+ Agregar al pedido (A cotizar)'}
             </button>
+            ${shareBtnHtml}
             <p style="font-size: 0.75rem; color: var(--gray); text-align: center; font-family: var(--font-ui); letter-spacing: 0.05em; margin-top: 0.8rem;">
                 ✨ El precio se acordará según diseño y personalización.
             </p>
@@ -352,7 +406,8 @@ function openProductDetail(id) {
             <button class="btn-primary" onclick="addToCart(${p.id}); closeProductDetail()" style="width:100%; padding: 1.2rem;">
                 ${ic ? '✓ En el carrito (Sumar otro)' : 'Agregar al carrito'}
             </button>
-            <p style="font-size: 0.75rem; color: var(--gray); text-align: center; font-family: var(--font-ui); letter-spacing: 0.05em;">
+            ${shareBtnHtml}
+            <p style="font-size: 0.75rem; color: var(--gray); text-align: center; font-family: var(--font-ui); letter-spacing: 0.05em; margin-top: 0.8rem;">
                 ✨ Envío a todo el país | ✨ Atención personalizada
             </p>
         `;
@@ -364,10 +419,35 @@ function openProductDetail(id) {
     detailModal.classList.add('open');
     document.body.style.overflow = 'hidden';
 }
-function closeProductDetail() {
+function closeProductDetail(updateHistory = true) {
     const el = document.getElementById('productDetailModal');
     if (el) el.classList.remove('open');
     document.body.style.overflow = '';
+    if (updateHistory) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('p') || url.searchParams.has('producto') || url.searchParams.has('id')) {
+            url.searchParams.delete('p');
+            url.searchParams.delete('producto');
+            url.searchParams.delete('id');
+            const cleanUrl = url.pathname + (url.search ? url.search : '') + (url.hash || '');
+            history.pushState(null, '', cleanUrl);
+        }
+    }
+}
+
+function checkUrlProduct() {
+    const params = new URLSearchParams(window.location.search);
+    let pId = params.get('p') || params.get('producto') || params.get('id');
+    if (!pId && window.location.hash) {
+        const m = window.location.hash.match(/#prod(?:ucto)?-(\d+)/i);
+        if (m) pId = m[1];
+    }
+    if (pId) {
+        const found = allProds.find(x => String(x.id) === String(pId));
+        if (found) {
+            openProductDetail(pId, false);
+        }
+    }
 }
 
 let featuredOrderCache = [];
@@ -1236,8 +1316,19 @@ async function handleAuthCallback() {
     }
 }
 
+window.addEventListener('popstate', () => {
+    const params = new URLSearchParams(window.location.search);
+    const pId = params.get('p') || params.get('producto') || params.get('id');
+    if (pId) {
+        openProductDetail(pId, false);
+    } else {
+        closeProductDetail(false);
+    }
+});
+
 // ===== INIT =====
 (function () {
     updateCartBadge(); refreshCategoryUI(); renderFeaturedProducts(); initAuth(); handleAuthCallback();
+    checkUrlProduct();
     loadSettingsFromDB(); loadCatsFromDB().then(() => loadProdsFromDB());
 })();

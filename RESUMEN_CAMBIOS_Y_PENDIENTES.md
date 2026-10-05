@@ -97,12 +97,49 @@
 
 ---
 
-## 4. Despliegue a Producción (GitHub / Netlify)
+---
+
+## 4. Cómo Levantar el Servidor Localmente
+
+> [!NOTE]
+> Este proyecto es **Vanilla Web (HTML/CSS/JS estático puro)**, por lo que no requiere `package.json` ni compiladores. El comando `npm run dev` **no es necesario ni aplica** en este proyecto.
+
+Para probar la tienda localmente en tu computadora:
+
+* **Opción 1: Con Python (Recomendada y más rápida):**
+  ```bash
+  python -m http.server
+  ```
+  *(Abrí tu navegador en: [http://localhost:8000](http://localhost:8000))*
+
+* **Opción 2: Con Node / npx (Sin instalar paquetes):**
+  ```bash
+  npx serve
+  ```
+  *(Abrí tu navegador en: [http://localhost:3000](http://localhost:3000))*
+
+* **Opción 3: Live Server en VS Code / Cursor:**
+  - Clic derecho sobre `index.html` en el explorador de archivos > **Open with Live Server**.
+
+---
+
+## 5. Cambios Recientes (5 de Octubre)
+
+* **Eliminación del badge de Oferta:** Ahora solo se admiten las opciones *Nuevo*, *Destacado* y *Sin badge*.
+* **Catálogo "Todos los productos" con Destacados primero:** Los productos marcados como Destacados (`hot`) aparecen en primera posición de forma automática al ingresar al catálogo.
+* **Links individuales para compartir productos en redes:**
+  - Cada producto tiene su URL directa limpia (`?p=ID`) que abre la ficha automáticamente.
+  - El nombre de cada producto es un enlace semántico `<a>` (`clic derecho > Copiar dirección de enlace`).
+  - Botón rápido `🔗` en cada tarjeta y botón *"Compartir Producto"* dentro del modal (utiliza la ventana nativa de compartir en celulares o copia al portapapeles en PC).
+
+---
+
+## 6. Despliegue a Producción (GitHub / Netlify)
 
 Para publicar todos los cambios en la tienda online en vivo:
 ```bash
 git add .
-git commit -m "Integrar CallMeBot WhatsApp, eliminacion de pedidos y gestor horizontal de favoritos"
+git commit -m "Agregar links compartibles de productos y destacados primero en catalogo"
 git push origin main
 ```
-*Netlify compilará y actualizará el sitio en vivo en aproximadamente 1 minuto.*
+*Netlify actualizará el sitio en vivo de forma automática en aproximadamente 1 minuto.*
