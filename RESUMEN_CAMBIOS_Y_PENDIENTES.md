@@ -1,100 +1,108 @@
 # Resumen de Cambios y Tareas Pendientes — Rochi Accesorios
 
-**Fecha:** 14 de Septiembre de 2026  
-**Objetivo:** Agregar a cada producto la posibilidad de cargar un precio manual por transferencia bancaria. Si el administrador carga dicho precio, se muestra al lado del precio regular; si no se carga nada, no aparece nada.
+**Última actualización:** 4 de Octubre de 2026  
+**Objetivos clave recientes:** 
+1. **Notificaciones instantáneas por WhatsApp (CallMeBot):** Envío automático de alertas con el detalle de cada pedido al teléfono `+5492964495799`.
+2. **Eliminación de pedidos en Admin:** Botón `🗑️` en la tabla de pedidos con confirmación, validación de filas eliminadas y actualización en tiempo real de estadísticas.
+3. **Gestor visual de orden para "Nuestros Favoritos":** Nueva pestaña `⭐ Favoritos` con cuadrícula horizontal compacta ("uno al lado del otro"), controles `◀` / `▶`, adición desde catálogo y persistencia en Supabase.
+4. **Precios diferenciados por transferencia bancaria:** Carga opcional con badge distintivo.
+5. **Productos sin precio fijo / a cotizar:** Checkbox en admin y visualización de "Consultar" con enlace directo a WhatsApp.
+6. **Navegación táctil optimizada:** Deslizamiento (swipe) en carruseles de fotos para móviles.
 
 ---
 
-## 1. Lo que se realizó hoy
+## 1. Lo que se implementó hoy
 
-### A. Formulario y Tabla de Administración (`index.html`)
-- Se organizó la grilla del formulario de productos en pares alineados de dos columnas.
-- Se agregó el campo:
-  ```html
-  <div class="form-group">
-    <label class="form-label">Precio transferencia (opcional)</label>
-    <input class="form-input" type="number" id="pTransferPrice" placeholder="2200">
-  </div>
-  ```
-- Se renombró la etiqueta del precio principal a `"Precio regular *"` para que la distinción sea clara para el administrador.
-
-### B. Estilos y Diseño Visual (`css/style.css`)
-- Se crearon las clases `.product-price-transfer` y `.product-detail-price-transfer` con un diseño estilo pastilla/badge e-commerce (`[Transf.] $X.XXX`), con tono verde suave acorde a la estética elegante de la tienda.
-- Se modificó `.product-price-wrap` y `.product-detail-price-row` con `display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem 0.8rem;` para asegurar que ambos precios se muestren lado a lado sin desbordes en celulares ni computadoras.
-
-### C. Lógica de Negocio en JavaScript (`js/app.js`)
-- **Carga de datos (`loadProdsFromDB`):** Se mapea el campo `transfer_price` traído de Supabase como número o `null`.
-- **Tarjetas de productos (`productCard`):** Se implementó renderizado condicional: si `p.transfer_price` existe y es mayor a 0, se muestra junto al precio regular; de lo contrario no se renderiza nada adicional.
-- **Modal de Detalle (`openProductDetail`):** Se agregó la misma lógica condicional para el modal que se abre al tocar un producto.
-- **Formulario de edición (`openProductForm`):** Carga automáticamente el `transfer_price` del producto al editarlo, o lo vacía al crear uno nuevo.
-- **Guardado (`saveProduct`):** Lee `pTransferPrice`, lo envía en el payload a Supabase (`transfer_price`) y actualiza el estado local en memoria.
-- **Tabla de Gestión (`renderAdminProducts`):** Se agregó la columna `"Precio transf."` con ordenamiento numérico ascendente y descendente al hacer clic en el encabezado.
-
-### E. Deslizamiento Táctil (Swipe) en Carrusel de Fotos para Celulares (`js/app.js` y `css/style.css`)
-- **Controladores de eventos táctiles (`js/app.js`):**
-  - Se implementaron las funciones `handleCarouselTouchStart`, `handleCarouselTouchMove` y `handleCarouselTouchEnd` para capturar gestos de deslizamiento en pantallas táctiles.
-  - **Deslizar hacia la izquierda:** Avanza a la siguiente foto del producto.
-  - **Deslizar hacia la derecha:** Retrocede a la foto anterior.
-  - **Detección inteligente de tap vs. swipe:** Si el usuario desliza con el pulgar para mirar fotos, el sistema bloquea temporalmente el evento de clic para evitar que se abra por error el modal de detalle del producto. Si hace un toque normal (tap), el producto se abre con total normalidad.
-  - Se habilitó tanto en las tarjetas del catálogo (`productCard`) como en el visor ampliado dentro del modal de producto (`openProductDetail`).
-- **Optimización y suavidad en CSS (`css/style.css`):**
-  - Se agregó `touch-action: pan-y;` en `.carousel-container` y `.carousel-inner` para que el scroll vertical de la página no se bloquee ni tironee mientras el usuario desliza horizontalmente.
-  - Se aplicaron las reglas `user-select: none;` y `-webkit-user-drag: none;` para prevenir que el navegador intente arrastrar la imagen como elemento fantasma.
-
-### F. Textos y Personalización Editable desde Panel de Ajustes
-- Se configuró el párrafo principal de historia de la sección **"Nosotros"** (`id="aboutStoryText"`) para que pueda ser modificado directamente desde **Admin > ⚙️ Ajustes** (`setAboutStory`) y se guarde en Supabase (`about_story`).
-- Actualización de textos del Hero a *"Nueva Temporada 2026"* y enfoque en productos personalizados (Sublimación, Láser, 3D).
-
-### G. Productos Sin Precio Fijo ("Consultar" / A Cotizar)
-- **Checkbox en Formulario Admin (`index.html`):** Se añadió el checkbox `☑️ Producto sin precio fijo (Mostrar "Consultar")` que permite crear productos cuyo precio se acuerda de forma personalizada con el cliente.
-- **Lógica dinámica en Admin (`js/app.js`):** Al tildar el checkbox, los campos `Precio regular`, `Precio transferencia` y `Precio anterior` se deshabilitan, se vacían automáticamente y la etiqueta cambia a `(No aplica)`. La validación de guardado permite guardar sin precio regular (asigna `price: 0`, `transfer_price: null`, `old_price: null`, compatible con las restricciones de PostgreSQL sin requerir migraciones).
-- **Renderizado en Tienda (`js/app.js` y `css/style.css`):**
-  - **Catálogo y Destacados (`productCard`):** En lugar de mostrar un precio monetario o `$0`, se muestra elegantemente en cursiva **"Consultar"**. El botón de acción muestra **"Consultar"** y abre directamente el modal de detalle del producto.
-  - **Modal de Detalle (`openProductDetail`):** Se muestra **"Consultar"** en el precio y se habilita un botón destacado verde: **"💬 Consultar por WhatsApp"**, que abre una conversación con mensaje prearmado: *"¡Hola! Quisiera consultar el precio y disponibilidad del producto: '[Nombre]'."* Además se permite sumar a la lista de pedido.
-  - **Carrito y Checkout:** Los productos sin precio fijo se visualizan como `"Consultar"` en el desglose de productos, y el total estimado aclara `(+ a cotizar)`.
-  - **Buscador y Tabla Admin:** El buscador muestra `"Consultar"` en vez de `$0`, y la tabla de administración muestra una pastilla distintiva `"Consultar"`.
-
+### A. Notificaciones Automáticas por WhatsApp (CallMeBot)
+- **Número destino predeterminado:** `+5492964495799` (limpiado automáticamente a formato internacional `5492964495799`).
+- **Lógica de Envío (`js/app.js`):**
+  - Función `sendCallMeBotNotification(order)` integrada en `submitOrder()`.
+  - Mensaje con formato enriquecido de WhatsApp (negritas con asteriscos, emojis, número de orden, cliente, teléfono, dirección, método de pago, notas opcionales, detalle ítem por ítem y total).
+  - Petición HTTP directa vía `fetch` con `mode: 'no-cors'` para garantizar compatibilidad desde el navegador.
+- **Panel de Administración (`index.html` > Ajustes):**
+  - Bloque visual *"🔔 Notificaciones WhatsApp (CallMeBot)"*.
+  - Checkbox para activar/desactivar el servicio, campo para teléfono y campo para API Key.
+  - Botón interactivo *"📲 Probar Notificación"* (`testCallMeBot()`) para verificar la entrega del mensaje en WhatsApp sin crear pedidos ficticios.
+  - Guía con enlace directo a WhatsApp para generar la clave en 30 segundos enviando `I allow callmebot to send me messages` al bot (+34 644 44 24 99).
+- **Persistencia y SQL:**
+  - Valores sincronizados con la tabla `site_settings` de Supabase (`callmebot_phone`, `callmebot_apikey`, `callmebot_enabled`).
+  - Creado `callmebot-settings-update.sql` como script auxiliar.
 
 ---
 
-## 2. Lo que quedó pendiente de hacer y probar
-
-###  Paso 1: Migración en Supabase (Transfer Price)
-- [x] Ejecutar en el SQL Editor de Supabase:
-  ```sql
-  ALTER TABLE products ADD COLUMN IF NOT EXISTS transfer_price NUMERIC;
-  ```
-  *(Resuelve el error `Could not find the 'transfer_price' column of 'products' in the schema cache`).*
-
----
-
-### 📱 Paso 2: Probar el carrusel táctil en celular
-- [ ] Entrar desde un teléfono móvil (o modo responsive del navegador con `F12`) a la tienda.
-- [ ] En un producto con varias fotos, deslizar el dedo hacia la izquierda y derecha para verificar el cambio fluido de imágenes.
-- [ ] Comprobar que deslizar no abra accidentalmente el modal de detalle.
-- [ ] Abrir el modal de detalle y probar el deslizamiento táctil en la foto ampliada.
+### B. Eliminación de Pedidos en Panel de Administración
+- **Botón `🗑️` en tabla de pedidos (`js/app.js`):**
+  - Incorporado en la columna **Acciones** al lado del botón de estado (`✓ Confirmar` / `↩ Pendiente`).
+- **Confirmación y seguridad (`deleteOrder(id)`):**
+  - Cuadro de confirmación antes de borrar para prevenir clics accidentales.
+  - Uso de `.delete().eq('id', id).select()` para verificar que la fila efectivamente se haya borrado en la base de datos.
+  - Alerta explicativa en caso de que las políticas de seguridad Row Level Security (RLS) de Supabase requieran habilitar permisos de `DELETE`.
+  - Recálculo inmediato de las tarjetas de estadísticas superiores (Total Pedidos, Pendientes y Facturación) y refresco automático de la tabla con los filtros vigentes.
+- **Script SQL auxiliar:**
+  - Creado `orders-delete-policy.sql` con la instrucción `CREATE POLICY "Public delete orders" ON orders FOR DELETE USING (true);`.
 
 ---
 
-### 🚀 Paso 3: Subir los últimos cambios a Netlify
-Cuando estés listo para desplegar las últimas mejoras de carrusel y estilos:
+### C. Gestor de Orden para "Nuestros Favoritos"
+- **Nueva Pestaña `⭐ Favoritos` (`index.html` & `js/app.js`):**
+  - Accesible desde la barra superior del panel de administración (`switchAdminTab('featured', this)`).
+- **Diseño en cuadrícula compacta ("uno al lado del otro"):**
+  - Tarjetas de tamaño uniforme distribuidas en múltiples columnas (`grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))`).
+  - Miniaturas cuadradas y contenidas (`max-height: 110px`, `object-fit: cover`) para permitir visualizar toda la selección de un solo vistazo.
+  - Número de posición visible (`#1`, `#2`, `#3`, etc.), nombre, precio y badge.
+- **Controles de reordenamiento:**
+  - Botones de navegación horizontal **`◀` (Mover a la izquierda)** y **`▶` (Mover a la derecha)** para intercambiar posiciones.
+  - Botón **`✕`** para quitar un producto de la sección de Favoritos sin borrarlo del catálogo.
+  - Selector con botón **`+ Agregar a Favoritos`** para sumar cualquier producto del catálogo a la lista.
+- **Sincronización:**
+  - Auto-guardado en Supabase (`site_settings` bajo la clave `featured_products_order`) y botón manual *"💾 Guardar Orden"*.
+  - La sección pública *"Nuestros Favoritos"* en la página principal (`renderFeaturedProducts()`) consume inmediatamente este orden prioritario.
+- **Invalidación de caché:**
+  - Versión de assets actualizada a `?v=11` en `index.html` para asegurar carga inmediata en navegadores.
+
+---
+
+## 2. Lo implementado en iteraciones previas
+
+### A. Productos Sin Precio Fijo ("Consultar" / A Cotizar)
+- Checkbox en formulario admin para deshabilitar campos de precio regular, transferencia y anterior.
+- En tienda, reemplazo de `$0` por *"Consultar"* y botón directo *"💬 Consultar por WhatsApp"* con mensaje prearmado.
+
+### B. Precios por Transferencia Bancaria
+- Campo opcional `pTransferPrice` en formulario y columna en tabla admin.
+- Pastilla verde distintiva `[Transf.] $X.XXX` alineada con el precio regular.
+
+### C. Deslizamiento Táctil (Swipe) en Celulares
+- Detección de gestos `touchstart`/`touchmove`/`touchend` con bloqueo inteligente de clics accidentales.
+
+---
+
+## 3. Checklist de Pruebas y Tareas Pendientes
+
+### 🧪 Paso 1: Configurar la API Key de CallMeBot
+- [ ] Abrir chat con CallMeBot (+34 644 44 24 99) o ingresar a https://wa.me/34644442499?text=I%20allow%20callmebot%20to%20send%20me%20messages
+- [ ] Enviar el mensaje: `I allow callmebot to send me messages`.
+- [ ] Copiar la clave recibida, pegarla en **Admin > ⚙️ Ajustes > Notificaciones WhatsApp (CallMeBot)** y tocar **📲 Probar Notificación**.
+- [ ] Guardar los ajustes y realizar un pedido de prueba en la tienda para verificar que llegue la alerta completa.
+
+### 🗑️ Paso 2: Probar la eliminación de pedidos
+- [ ] Si al tocar el botón `🗑️` en un pedido aparece la alerta de RLS de Supabase:
+  - Entrar a [Supabase SQL Editor](https://supabase.com/dashboard) y ejecutar `orders-delete-policy.sql`.
+- [ ] Confirmar que el pedido se borre de la tabla y las estadísticas superiores se descuenten al instante.
+
+### ⭐ Paso 3: Probar el gestor de Favoritos
+- [ ] Ir a **Admin > ⭐ Favoritos**.
+- [ ] Mover productos con `◀` y `▶` y comprobar que se reposicionen en la grilla.
+- [ ] Volver a la página de Inicio y comprobar que la sección *"Nuestros Favoritos"* refleje el nuevo orden establecido.
+
+---
+
+## 4. Despliegue a Producción (GitHub / Netlify)
+
+Para publicar todos los cambios en la tienda online en vivo:
 ```bash
 git add .
-git commit -m "Agregar soporte swipe táctil en carrusel móvil y ajustes generales"
+git commit -m "Integrar CallMeBot WhatsApp, eliminacion de pedidos y gestor horizontal de favoritos"
 git push origin main
 ```
-Netlify detectará el push y publicará la web actualizada en 1 minuto.
-
----
-
-### 💌 Paso 4: Tarea futura a definir (Administración de Suscriptores)
-- [ ] **Pestaña "Suscriptores" en Panel Admin:** Actualmente los suscriptores de *"Unite a nuestro Club"* se guardan en la tabla `newsletter` de Supabase. Evaluar si se desea agregar una pestaña visual en el panel de administrador para:
-  - Ver la lista completa de emails y fecha de registro.
-  - Botón de 1 clic para copiar todos los correos (para pegar en CCO de Gmail/Outlook).
-  - Botón para exportar lista a CSV / Excel.
-  - Opción de eliminar suscriptores.
-
----
-
-### 💡 Paso 5: Definición futura opcional (Checkout / Carrito)
-- [ ] Actualmente, el checkout mantiene el precio regular y la nota informativa de coordinar el pago por WhatsApp. Evaluar si a futuro se desea que cuando el cliente elija *"Transferencia"* como método de pago en el checkout, el total del pedido se recalcule automáticamente con los precios de transferencia cargados.
+*Netlify compilará y actualizará el sitio en vivo en aproximadamente 1 minuto.*

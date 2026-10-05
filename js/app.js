@@ -43,6 +43,7 @@ const DEFAULT_PRODS = [
 ];
 
 let cart = JSON.parse(localStorage.getItem('rochi_cart') || '[]');
+let siteSettingsCache = {};
 let currentUser = null;
 let activeFilter = 'all';
 let currentPage = 'home';
@@ -98,6 +99,7 @@ async function loadSettingsFromDB() {
     const { data, error } = await db.from('site_settings').select('*');
     if (!error && data) {
         data.forEach(s => {
+            siteSettingsCache[s.key] = s.value;
             if (s.key === 'announcement_banner') {
                 const el = document.getElementById('announcementBar');
                 if (el) el.textContent = s.value;
@@ -110,6 +112,15 @@ async function loadSettingsFromDB() {
             if (s.key === 'emailjs_public_key') { const el = document.getElementById('setEmailJSKey'); if (el) el.value = s.value; }
             if (s.key === 'emailjs_service_id') { const el = document.getElementById('setEmailJSService'); if (el) el.value = s.value; }
             if (s.key === 'emailjs_template_id') { const el = document.getElementById('setEmailJSTemplate'); if (el) el.value = s.value; }
+            if (s.key === 'callmebot_phone') {
+                const el = document.getElementById('setCallMeBotPhone'); if (el) el.value = s.value;
+            }
+            if (s.key === 'callmebot_apikey') {
+                const el = document.getElementById('setCallMeBotApiKey'); if (el) el.value = s.value;
+            }
+            if (s.key === 'callmebot_enabled') {
+                const el = document.getElementById('setCallMeBotEnabled'); if (el) el.checked = (s.value === 'true');
+            }
             if (s.key === 'contact_email') {
                 const input = document.getElementById('setContactEmail'); if (input) input.value = s.value;
                 const fEl = document.getElementById('footerContactEmail'); if (fEl) fEl.textContent = s.value;
@@ -148,11 +159,13 @@ async function loadSettingsFromDB() {
                 const el = document.getElementById('aboutStoryText'); if (el) el.textContent = s.value;
             }
         });
+        renderFeaturedProducts();
     }
     const initField = (inputId, elId, def) => {
         const inp = document.getElementById(inputId);
         if (inp && !inp.value) inp.value = document.getElementById(elId)?.textContent.trim() || def;
     };
+    initField('setCallMeBotPhone', null, '+5492964495799');
     initField('setContactEmail', 'footerContactEmail', 'info@rochiaccesorios.com.ar');
     initField('setContactPhone', 'footerContactPhone', '+54 9 11 2345-6789');
     initField('setContactAddress', 'footerContactAddress', 'Río Grande, Tierra del Fuego');
@@ -353,10 +366,37 @@ function closeProductDetail() {
     document.body.style.overflow = '';
 }
 
+let featuredOrderCache = [];
+
+function getFeaturedProductsList() {
+    let orderIds = [];
+    try {
+        const raw = siteSettingsCache['featured_products_order'];
+        if (raw) {
+            orderIds = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            if (!Array.isArray(orderIds)) orderIds = [];
+        }
+    } catch (e) {
+        orderIds = [];
+    }
+
+    if (orderIds.length > 0) {
+        const ordered = [];
+        orderIds.forEach(id => {
+            const p = allProds.find(x => String(x.id) === String(id));
+            if (p && !ordered.some(o => String(o.id) === String(p.id))) ordered.push(p);
+        });
+        allProds.filter(p => p.badge && !ordered.some(o => String(o.id) === String(p.id))).forEach(p => ordered.push(p));
+        return ordered;
+    }
+
+    return allProds.filter(p => p.badge);
+}
+
 function renderFeaturedProducts() {
     _cardCtx = 'feat-';
     const el = document.getElementById('featuredGrid');
-    if (el) el.innerHTML = allProds.filter(p => p.badge).slice(0, 8).map(productCard).join('');
+    if (el) el.innerHTML = getFeaturedProductsList().slice(0, 8).map(productCard).join('');
 }
 function renderAllProducts() {
     _cardCtx = 'all-';
@@ -459,7 +499,9 @@ async function submitOrder() {
     const { error } = await db.from('orders').insert({ id: oid, customer_name: name, customer_email: email, customer_phone: phone, customer_address: address, notes, payment_method: payment, items: cart, total: cart.reduce((s, i) => s + i.price * i.qty, 0), username: uname, status: 'pending' });
     if (error) { showToast('❌', 'Error al enviar el pedido. Intentá de nuevo.'); btn.disabled = false; btn.innerHTML = 'Confirmar y Enviar Pedido →'; return; }
 
-    sendOrderEmails({ id: oid, name, email, phone, address, notes, payment, items: [...cart], total: cart.reduce((s, i) => s + i.price * i.qty, 0) });
+    const orderData = { id: oid, name, email, phone, address, notes, payment, items: [...cart], total: cart.reduce((s, i) => s + i.price * i.qty, 0) };
+    sendOrderEmails(orderData);
+    sendCallMeBotNotification(orderData);
 
     cart = []; localStorage.setItem('rochi_cart', JSON.stringify(cart)); updateCartBadge();
     const cc = document.getElementById('checkoutContent'), cs = document.getElementById('checkoutSuccess');
@@ -565,6 +607,7 @@ function switchAdminTab(tab, btn) {
     const t = document.getElementById('adminTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
     if (t) t.classList.add('active');
     if (tab === 'products') renderAdminProducts();
+    if (tab === 'featured') renderAdminFeatured();
     if (tab === 'categories') renderAdminCategories();
     if (tab === 'settings') loadSettingsFromDB();
 }
@@ -594,13 +637,29 @@ async function loadAdminOrders(filters = {}) {
         const summary = items.map(i => `${i.emoji || ''} ${i.name} (×${i.qty})`).join(', ');
         const qty = items.reduce((s, i) => s + i.qty, 0);
         const date = new Date(o.created_at).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-        return `<tr><td><strong>${o.id}</strong></td><td style="white-space:nowrap">${date}</td><td>${o.customer_name}</td><td>${o.username || 'Invitado'}</td><td style="max-width:260px;white-space:normal;font-size:.72rem">${summary}</td><td style="text-align:center">${qty}</td><td><strong>$${Number(o.total).toLocaleString('es-AR')}</strong></td><td>${o.customer_phone}</td><td>${o.payment_method || '—'}</td><td><span class="order-status status-${o.status}">${o.status === 'pending' ? 'Pendiente' : 'Confirmado'}</span></td><td><button onclick="toggleOrderStatus('${o.id}','${o.status}')" style="background:var(--black);color:white;border:none;padding:.3rem .7rem;font-size:.6rem;cursor:pointer;font-family:var(--font-ui)">${o.status === 'pending' ? '✓ Confirmar' : '↩ Pendiente'}</button></td></tr>`;
+        return `<tr><td><strong>${o.id}</strong></td><td style="white-space:nowrap">${date}</td><td>${o.customer_name}</td><td>${o.username || 'Invitado'}</td><td style="max-width:260px;white-space:normal;font-size:.72rem">${summary}</td><td style="text-align:center">${qty}</td><td><strong>$${Number(o.total).toLocaleString('es-AR')}</strong></td><td>${o.customer_phone}</td><td>${o.payment_method || '—'}</td><td><span class="order-status status-${o.status}">${o.status === 'pending' ? 'Pendiente' : 'Confirmado'}</span></td><td style="white-space:nowrap"><div style="display:flex;gap:.35rem;align-items:center"><button onclick="toggleOrderStatus('${o.id}','${o.status}')" style="background:var(--black);color:white;border:none;padding:.3rem .7rem;font-size:.6rem;cursor:pointer;font-family:var(--font-ui)">${o.status === 'pending' ? '✓ Confirmar' : '↩ Pendiente'}</button><button class="btn-delete" onclick="deleteOrder('${o.id}')" title="Eliminar pedido" style="padding:.3rem .55rem;font-size:.65rem">🗑️</button></div></td></tr>`;
     }).join('');
-    el.innerHTML = `<table class="admin-table"><thead><tr><th>N° Pedido</th><th>Fecha</th><th>Cliente</th><th>Usuario</th><th>Items</th><th>Cant.</th><th>Total</th><th>Teléfono</th><th>Pago</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${rows}</tbody></table>`;
+    el.innerHTML = `<table class="admin-table"><thead><tr><th>N° Pedido</th><th>Fecha</th><th>Cliente</th><th>Usuario</th><th>Items</th><th>Cant.</th><th>Total</th><th>Teléfono</th><th>Pago</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 function applyOrderFilters() { loadAdminOrders({ status: document.getElementById('filterStatus')?.value, dateFrom: document.getElementById('filterDateFrom')?.value, dateTo: document.getElementById('filterDateTo')?.value }); }
 function clearOrderFilters() { const s = document.getElementById('filterStatus'), df = document.getElementById('filterDateFrom'), dt = document.getElementById('filterDateTo'); if (s) s.value = ''; if (df) df.value = ''; if (dt) dt.value = ''; loadAdminOrders(); }
-async function toggleOrderStatus(id, current) { await db.from('orders').update({ status: current === 'pending' ? 'confirmed' : 'pending' }).eq('id', id); applyOrderFilters(); }
+async function toggleOrderStatus(id, current) { await db.from('orders').update({ status: current === 'pending' ? 'confirmed' : 'pending' }).eq('id', id); await loadAdminStats(); applyOrderFilters(); }
+async function deleteOrder(id) {
+    if (!confirm(`¿Estás seguro de que querés eliminar el pedido #${id}? Esta acción no se puede deshacer.`)) return;
+    const { data, error } = await db.from('orders').delete().eq('id', id).select();
+    if (error) {
+        showToast('❌', 'Error al eliminar: ' + error.message);
+        return;
+    }
+    if (!data || data.length === 0) {
+        showToast('⚠️', 'Falta habilitar la política DELETE en Supabase');
+        alert('Supabase tiene activada la seguridad Row Level Security (RLS) en la tabla "orders" y aún no tiene permiso para borrar registros.\n\nPara habilitarlo en 10 segundos:\n1. Entrá a tu panel de Supabase > SQL Editor.\n2. Ejecutá:\nCREATE POLICY "Public delete orders" ON orders FOR DELETE USING (true);');
+        return;
+    }
+    showToast('🗑️', `Pedido #${id} eliminado`);
+    await loadAdminStats();
+    applyOrderFilters();
+}
 
 // --- ADMIN PRODUCTS ---
 let adminSortKey = 'id';
@@ -791,6 +850,121 @@ function renderAdminProducts() {
     }).join('')}</tbody></table>`;
 }
 
+// --- ADMIN FEATURED PRODUCTS REORDERING ---
+function renderAdminFeatured() {
+    const el = document.getElementById('adminFeaturedContent');
+    const selectEl = document.getElementById('addFeaturedSelect');
+    if (!el) return;
+
+    const list = getFeaturedProductsList();
+    featuredOrderCache = list.map(p => String(p.id));
+
+    if (selectEl) {
+        const notInList = allProds.filter(p => !featuredOrderCache.includes(String(p.id)));
+        selectEl.innerHTML = '<option value="">Seleccioná un producto del catálogo...</option>' + 
+            notInList.map(p => `<option value="${p.id}">${p.emoji || '📦'} ${p.name} (${getCatName(p.category_slug || p.category)})</option>`).join('');
+    }
+
+    if (!list.length) {
+        el.innerHTML = `<div class="admin-empty"><div class="admin-empty-icon">⭐</div><p style="font-family:var(--font-display);font-size:1.2rem">No hay productos en Favoritos todavía</p><p style="font-size:0.85rem;color:var(--gray)">Podés agregar productos desde el selector superior o asignándoles un badge en la pestaña "Productos".</p></div>`;
+        return;
+    }
+
+    el.innerHTML = `
+        <div style="background:var(--pink-pale);padding:0.8rem 1.2rem;border:1px solid var(--pink-light);font-size:0.75rem;color:var(--gray);margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+            <span>📌 <strong>${list.length} productos en Favoritos.</strong> Los primeros se muestran en el carrusel de inicio.</span>
+            <span style="font-size:0.72rem;color:var(--pink-dark);font-weight:600">Usá ◀ / ▶ para ordenar de izquierda a derecha</span>
+        </div>
+        <div class="featured-admin-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;">
+            ${list.map((p, idx) => {
+                const isFirst = idx === 0;
+                const isLast = idx === list.length - 1;
+                const isConsult = !p.price || Number(p.price) <= 0;
+                const priceText = isConsult ? 'Consultar' : '$' + Number(p.price).toLocaleString('es-AR');
+                let imgTag = `<div style="font-size:2.2rem;display:flex;align-items:center;justify-content:center;height:100%">${p.emoji || '📦'}</div>`;
+                const rawImg = p.image_url || (p.image_urls && p.image_urls.length > 0 ? p.image_urls[0] : null);
+                if (rawImg) {
+                    imgTag = `<img src="${rawImg}" alt="${p.name}" style="width:100% !important;height:110px !important;max-height:110px !important;object-fit:cover !important;display:block !important;border-radius:3px">`;
+                }
+                const badgeText = p.badge === 'hot' ? '🔥 Destacado' : (p.badge === 'new' ? '✨ Nuevo' : (p.badge === 'offer' ? '🏷️ Oferta' : 'Sin badge'));
+
+                return `
+                <div class="featured-admin-card" id="feat-item-${p.id}" style="background:var(--white);border:1px solid var(--pink-light);border-radius:6px;padding:0.7rem;display:flex;flex-direction:column;position:relative;box-shadow:0 2px 6px rgba(0,0,0,0.03)">
+                    <div class="featured-card-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
+                        <span class="featured-card-pos" style="background:var(--pink-pale);color:var(--pink-deep);font-weight:700;font-size:0.75rem;padding:0.15rem 0.5rem;border-radius:12px;font-family:var(--font-ui);border:1px solid var(--pink-light)">#${idx + 1}</span>
+                        <span class="featured-card-badge" style="font-size:0.65rem;color:var(--pink-dark);font-family:var(--font-ui);font-weight:600">${badgeText}</span>
+                    </div>
+                    <div class="featured-card-thumb-wrap" style="width:100%;height:110px;max-height:110px;background:var(--pink-pale);border-radius:4px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem;border:1px solid var(--pink-light)">
+                        ${imgTag}
+                    </div>
+                    <div class="featured-card-name" title="${p.name}" style="font-family:var(--font-display);font-size:0.92rem;font-weight:600;color:var(--black);margin-bottom:0.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+                    <div class="featured-card-meta" style="font-family:var(--font-ui);font-size:0.72rem;color:var(--gray);margin-bottom:0.6rem;display:flex;justify-content:space-between;align-items:center">
+                        <span>🏷️ ${getCatName(p.category_slug || p.category)}</span>
+                        <strong style="color:var(--black)">${priceText}</strong>
+                    </div>
+                    <div class="featured-card-controls" style="display:flex;gap:0.35rem;margin-top:auto">
+                        <button class="feat-btn-nav" title="Mover a la izquierda" onclick="moveFeatured(${idx}, -1)" ${isFirst ? 'disabled' : ''} style="flex:1;background:var(--cream);border:1px solid var(--pink-light);color:var(--charcoal);padding:0.35rem 0.2rem;font-size:0.8rem;font-weight:bold;cursor:pointer;border-radius:4px">◀</button>
+                        <button class="btn-delete" title="Quitar de Favoritos" onclick="removeFeatured('${p.id}')" style="padding:0.35rem 0.6rem;font-size:0.7rem">✕</button>
+                        <button class="feat-btn-nav" title="Mover a la derecha" onclick="moveFeatured(${idx}, 1)" ${isLast ? 'disabled' : ''} style="flex:1;background:var(--cream);border:1px solid var(--pink-light);color:var(--charcoal);padding:0.35rem 0.2rem;font-size:0.8rem;font-weight:bold;cursor:pointer;border-radius:4px">▶</button>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>
+    `;
+}
+
+async function moveFeatured(index, direction) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= featuredOrderCache.length) return;
+    const temp = featuredOrderCache[index];
+    featuredOrderCache[index] = featuredOrderCache[newIndex];
+    featuredOrderCache[newIndex] = temp;
+
+    siteSettingsCache['featured_products_order'] = JSON.stringify(featuredOrderCache);
+    renderAdminFeatured();
+    renderFeaturedProducts();
+
+    await db.from('site_settings').upsert({ key: 'featured_products_order', value: JSON.stringify(featuredOrderCache) }, { onConflict: 'key' });
+}
+
+async function removeFeatured(id) {
+    if (!confirm('¿Quitar este producto de la sección Nuestros Favoritos?')) return;
+    featuredOrderCache = featuredOrderCache.filter(x => String(x) !== String(id));
+    siteSettingsCache['featured_products_order'] = JSON.stringify(featuredOrderCache);
+    renderAdminFeatured();
+    renderFeaturedProducts();
+    await db.from('site_settings').upsert({ key: 'featured_products_order', value: JSON.stringify(featuredOrderCache) }, { onConflict: 'key' });
+    showToast('🗑️', 'Producto quitado de Favoritos');
+}
+
+async function addSelectedToFeatured() {
+    const sel = document.getElementById('addFeaturedSelect');
+    const id = sel?.value;
+    if (!id) {
+        showToast('⚠️', 'Seleccioná un producto de la lista');
+        return;
+    }
+    if (!featuredOrderCache.includes(String(id))) {
+        featuredOrderCache.push(String(id));
+        siteSettingsCache['featured_products_order'] = JSON.stringify(featuredOrderCache);
+        renderAdminFeatured();
+        renderFeaturedProducts();
+        await db.from('site_settings').upsert({ key: 'featured_products_order', value: JSON.stringify(featuredOrderCache) }, { onConflict: 'key' });
+        showToast('⭐', 'Producto agregado a Favoritos');
+    }
+}
+
+async function saveFeaturedOrder() {
+    siteSettingsCache['featured_products_order'] = JSON.stringify(featuredOrderCache);
+    const { error } = await db.from('site_settings').upsert({ key: 'featured_products_order', value: JSON.stringify(featuredOrderCache) }, { onConflict: 'key' });
+    if (error) {
+        showToast('❌', 'Error al guardar orden: ' + error.message);
+    } else {
+        showToast('✅', 'Orden de Favoritos guardado');
+        renderFeaturedProducts();
+    }
+}
+
 // --- ADMIN CATEGORIES ---
 function openCategoryForm(cat = null) {
     const wrap = document.getElementById('categoryFormWrap'); if (!wrap) return;
@@ -851,6 +1025,72 @@ async function sendOrderEmails(order) {
     } catch (err) { console.error('Error EmailJS:', err); }
 }
 
+// --- CALLMEBOT (WHATSAPP NOTIFICATIONS) ---
+async function sendCallMeBotNotification(order) {
+    const rawPhone = siteSettingsCache['callmebot_phone'] || document.getElementById('setCallMeBotPhone')?.value || '+5492964495799';
+    const phone = rawPhone.replace(/[^0-9]/g, '');
+    const apiKey = siteSettingsCache['callmebot_apikey'] || document.getElementById('setCallMeBotApiKey')?.value?.trim() || '';
+    const enabled = siteSettingsCache['callmebot_enabled'] !== undefined
+        ? siteSettingsCache['callmebot_enabled'] === 'true'
+        : (document.getElementById('setCallMeBotEnabled') ? document.getElementById('setCallMeBotEnabled').checked : true);
+
+    if (!enabled) {
+        console.log('CallMeBot está deshabilitado en ajustes');
+        return;
+    }
+    if (!apiKey) {
+        console.warn('CallMeBot no configurado: falta ingresar la API Key en el panel de Ajustes');
+        return;
+    }
+
+    const itemsSummary = order.items.map(i => `• ${i.name} (x${i.qty}) - $${(i.price * i.qty).toLocaleString('es-AR')}`).join('\n');
+    const totalStr = '$' + order.total.toLocaleString('es-AR');
+
+    const msg = `🛍️ *¡NUEVO PEDIDO RECIBIDO!*
+*Pedido:* #${order.id}
+*Cliente:* ${order.name}
+*Tel:* ${order.phone}
+*Email:* ${order.email}
+*Dirección:* ${order.address || 'A convenir'}
+*Pago:* ${order.payment}
+${order.notes ? `*Notas:* ${order.notes}\n` : ''}
+📦 *Detalle:*
+${itemsSummary}
+
+💰 *Total:* ${totalStr}`;
+
+    try {
+        const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(msg)}&apikey=${encodeURIComponent(apiKey)}`;
+        await fetch(url, { method: 'GET', mode: 'no-cors' });
+        console.log('Notificación CallMeBot enviada a WhatsApp');
+    } catch (err) {
+        console.error('Error al enviar notificación CallMeBot:', err);
+    }
+}
+
+async function testCallMeBot() {
+    const rawPhone = document.getElementById('setCallMeBotPhone')?.value || '+5492964495799';
+    const phone = rawPhone.replace(/[^0-9]/g, '');
+    const apiKey = document.getElementById('setCallMeBotApiKey')?.value.trim();
+
+    if (!apiKey) {
+        showToast('⚠️', 'Ingresá tu API Key de CallMeBot antes de probar');
+        return;
+    }
+
+    showToast('⏳', 'Enviando WhatsApp de prueba...');
+    const testMsg = `🔔 *Rochi Accesorios - Notificación de Prueba*\n\n¡Felicitaciones! CallMeBot está configurado correctamente. A partir de ahora recibirás aquí cada nuevo pedido en tiempo real.`;
+
+    try {
+        const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}&text=${encodeURIComponent(testMsg)}&apikey=${encodeURIComponent(apiKey)}`;
+        await fetch(url, { method: 'GET', mode: 'no-cors' });
+        showToast('✅', 'Mensaje enviado. ¡Revisá tu WhatsApp!');
+    } catch (err) {
+        console.error('Error test CallMeBot:', err);
+        showToast('❌', 'Error al enviar mensaje de prueba');
+    }
+}
+
 function toggleEmailJSSettings(btn) {
     const keys = ['setEmailJSKey', 'setEmailJSService', 'setEmailJSTemplate'];
     const inputs = keys.map(k => document.getElementById(k));
@@ -865,15 +1105,20 @@ async function saveSiteSettings() {
         'announcement_banner', 'admin_email', 'email_subject', 'email_template',
         'emailjs_public_key', 'emailjs_service_id', 'emailjs_template_id',
         'contact_email', 'contact_phone', 'contact_address', 'contact_schedule',
-        'contact_instagram', 'contact_facebook', 'about_story'
+        'contact_instagram', 'contact_facebook', 'about_story',
+        'callmebot_phone', 'callmebot_apikey', 'callmebot_enabled'
     ];
     const ids = [
         'setBannerText', 'setAdminEmail', 'setEmailSubject', 'setEmailTemplate',
         'setEmailJSKey', 'setEmailJSService', 'setEmailJSTemplate',
         'setContactEmail', 'setContactPhone', 'setContactAddress', 'setContactSchedule',
-        'setContactInstagram', 'setContactFacebook', 'setAboutStory'
+        'setContactInstagram', 'setContactFacebook', 'setAboutStory',
+        'setCallMeBotPhone', 'setCallMeBotApiKey'
     ];
     const values = ids.map(id => document.getElementById(id)?.value.trim() ?? '');
+    const enabledVal = document.getElementById('setCallMeBotEnabled')?.checked ? 'true' : 'false';
+    values.push(enabledVal);
+
     const btn = document.getElementById('saveSettingsBtn');
     let orgTxt = btn ? btn.innerHTML : '';
     if (btn) { btn.innerHTML = '<span class="spinner"></span>...'; btn.disabled = true; }
@@ -881,6 +1126,7 @@ async function saveSiteSettings() {
     const { error } = await db.from('site_settings').upsert(settings, { onConflict: 'key' });
     if (btn) { btn.innerHTML = orgTxt; btn.disabled = false; }
     if (error) { showToast('❌', 'Error: ' + error.message); return; }
+    keys.forEach((k, idx) => { siteSettingsCache[k] = values[idx]; });
     showToast('✅', 'Ajustes guardados');
 
     const bannerVal = document.getElementById('setBannerText')?.value;
