@@ -372,7 +372,7 @@ function closeProductDetail() {
 
 let featuredOrderCache = [];
 
-function getFeaturedProductsList() {
+function getFeaturedOrderIds() {
     let orderIds = [];
     try {
         const raw = siteSettingsCache['featured_products_order'];
@@ -383,7 +383,12 @@ function getFeaturedProductsList() {
     } catch (e) {
         orderIds = [];
     }
+    if (orderIds.length > 0) return orderIds.map(String);
+    return (featuredOrderCache || []).map(String);
+}
 
+function getFeaturedProductsList() {
+    const orderIds = getFeaturedOrderIds();
     if (orderIds.length > 0) {
         const ordered = [];
         orderIds.forEach(id => {
@@ -397,6 +402,33 @@ function getFeaturedProductsList() {
     return allProds.filter(p => p.badge);
 }
 
+function sortCatalogByDefault(list) {
+    const featuredIds = getFeaturedOrderIds();
+    return [...list].sort((a, b) => {
+        // 1. Destacados (badge === 'hot') estrictamente primero
+        const aHot = a.badge === 'hot' ? 1 : 0;
+        const bHot = b.badge === 'hot' ? 1 : 0;
+        if (aHot !== bHot) return bHot - aHot;
+
+        // Si ambos son destacados ('hot'), respetar orden de Favoritos si existe
+        if (aHot && bHot && featuredIds.length > 0) {
+            const idxA = featuredIds.indexOf(String(a.id));
+            const idxB = featuredIds.indexOf(String(b.id));
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+        }
+
+        // 2. Nuevos (badge === 'new') en segundo lugar
+        const aNew = a.badge === 'new' ? 1 : 0;
+        const bNew = b.badge === 'new' ? 1 : 0;
+        if (aNew !== bNew) return bNew - aNew;
+
+        // 3. El resto mantiene orden por ID
+        return (Number(a.id) || 0) - (Number(b.id) || 0);
+    });
+}
+
 function renderFeaturedProducts() {
     _cardCtx = 'feat-';
     const el = document.getElementById('featuredGrid');
@@ -404,9 +436,9 @@ function renderFeaturedProducts() {
 }
 function renderAllProducts() {
     _cardCtx = 'all-';
-    let list = activeFilter === 'all' ? allProds : allProds.filter(p => (p.category_slug || p.category) === activeFilter);
-    const el = document.getElementById('allProductsGrid');
-    if (el) el.innerHTML = list.length ? list.map(productCard).join('') : `<div style="text-align:center;padding:4rem;color:var(--gray);font-family:var(--font-display);font-size:1.2rem">No hay productos en esta categoría.</div>`;
+    const sortSel = document.querySelector('.sort-select');
+    const sortVal = sortSel ? sortSel.value : 'default';
+    sortProducts(sortVal);
 }
 function filterAndGoProducts(cat, btn) {
     activeFilter = cat; showPage('products', null);
@@ -423,19 +455,23 @@ function filterProducts(cat, btn) {
     btn.classList.add('active'); renderAllProducts();
 }
 function sortProducts(val) {
+    const sortVal = val || document.querySelector('.sort-select')?.value || 'default';
     let list = activeFilter === 'all' ? [...allProds] : allProds.filter(p => (p.category_slug || p.category) === activeFilter);
-    if (val === 'price-asc') {
+    if (sortVal === 'price-asc') {
         list.sort((a, b) => {
             const pA = a.price && a.price > 0 ? Number(a.price) : 999999999;
             const pB = b.price && b.price > 0 ? Number(b.price) : 999999999;
             return pA - pB;
         });
-    } else if (val === 'price-desc') {
+    } else if (sortVal === 'price-desc') {
         list.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
-    } else if (val === 'name') {
+    } else if (sortVal === 'name') {
         list.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+        list = sortCatalogByDefault(list);
     }
-    const el = document.getElementById('allProductsGrid'); if (el) el.innerHTML = list.map(productCard).join('');
+    const el = document.getElementById('allProductsGrid');
+    if (el) el.innerHTML = list.length ? list.map(productCard).join('') : `<div style="text-align:center;padding:4rem;color:var(--gray);font-family:var(--font-display);font-size:1.2rem">No hay productos en esta categoría.</div>`;
 }
 
 // ===== CART =====
@@ -673,7 +709,13 @@ function sortAdminTable(key) { if (adminSortKey === key) adminSortDir = adminSor
 async function updateProductBadge(id, newBadge) {
     const { error } = await db.from('products').update({ badge: newBadge || null }).eq('id', id);
     if (error) { showToast('❌', 'Error: ' + error.message); renderAdminProducts(); }
-    else { const p = allProds.find(x => String(x.id) === String(id)); if (p) p.badge = newBadge || null; showToast('✨', 'Badge actualizado'); }
+    else {
+        const p = allProds.find(x => String(x.id) === String(id));
+        if (p) p.badge = newBadge || null;
+        showToast('✨', 'Badge actualizado');
+        renderFeaturedProducts();
+        if (currentPage === 'products') renderAllProducts();
+    }
 }
 
 let currentEditImages = [];
