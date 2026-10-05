@@ -250,7 +250,9 @@ function productCard(p) {
     const btnActionHtml = isConsult
         ? `<button class="btn-add-cart${ic ? ' in-cart' : ''}" onclick="event.stopPropagation(); openProductDetail(${p.id})">${ic ? '✓ En consulta' : 'Consultar'}</button>`
         : `<button class="btn-add-cart${ic ? ' in-cart' : ''}" onclick="event.stopPropagation(); addToCart(${p.id})">${ic ? '✓ En el carrito' : 'Agregar al carrito'}</button>`;
-    return `<article class="product-card" onclick="if(_isSwiping) return; openProductDetail(${p.id})"><div class="product-img-wrap" onclick="if(_isSwiping) { event.stopPropagation(); return; } openProductDetail(${p.id})">${imgContent}${p.badge ? `<span class="product-badge ${p.badge}">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}<button class="product-wishlist" onclick="event.stopPropagation();showToast('💖','Agregado a favoritos')">♡</button></div><div class="product-info"><div class="product-category">${getCatName(p.category_slug || p.category)}</div><div class="product-name" style="cursor:pointer">${p.name}</div>${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-bottom:0.4rem;line-height:1.4">${p.description}</div>` : ''}${priceWrapHtml}${btnActionHtml}</div></article>`;
+    const badgeLabel = p.badge === 'new' ? 'Nuevo' : (p.badge === 'hot' ? 'Destacado' : '');
+    const badgeHtml = badgeLabel ? `<span class="product-badge ${p.badge}">${badgeLabel}</span>` : '';
+    return `<article class="product-card" onclick="if(_isSwiping) return; openProductDetail(${p.id})"><div class="product-img-wrap" onclick="if(_isSwiping) { event.stopPropagation(); return; } openProductDetail(${p.id})">${imgContent}${badgeHtml}<button class="product-wishlist" onclick="event.stopPropagation();showToast('💖','Agregado a favoritos')">♡</button></div><div class="product-info"><div class="product-category">${getCatName(p.category_slug || p.category)}</div><div class="product-name" style="cursor:pointer">${p.name}</div>${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-bottom:0.4rem;line-height:1.4">${p.description}</div>` : ''}${priceWrapHtml}${btnActionHtml}</div></article>`;
 }
 
 let _touchStartX = 0;
@@ -356,7 +358,9 @@ function openProductDetail(id) {
         `;
     }
 
-    detailContent.innerHTML = `<div class="product-detail-grid"><div class="product-detail-img-side">${imgHtml}${p.badge ? `<span class="product-badge ${p.badge}" style="top:1.5rem; left:1.5rem">${p.badge === 'new' ? 'Nuevo' : 'Oferta'}</span>` : ''}</div><div class="product-detail-info-side"><div class="product-detail-cat">${getCatName(p.category_slug || p.category)}</div><h2 class="product-detail-name">${p.name}</h2>${priceRowHtml}<div class="product-detail-desc">${p.description || 'Sin descripción disponible para este producto.'}</div><div class="product-detail-actions">${actionsHtml}</div></div></div>`;
+    const detailBadgeLabel = p.badge === 'new' ? 'Nuevo' : (p.badge === 'hot' ? 'Destacado' : '');
+    const detailBadgeHtml = detailBadgeLabel ? `<span class="product-badge ${p.badge}" style="top:1.5rem; left:1.5rem">${detailBadgeLabel}</span>` : '';
+    detailContent.innerHTML = `<div class="product-detail-grid"><div class="product-detail-img-side">${imgHtml}${detailBadgeHtml}</div><div class="product-detail-info-side"><div class="product-detail-cat">${getCatName(p.category_slug || p.category)}</div><h2 class="product-detail-name">${p.name}</h2>${priceRowHtml}<div class="product-detail-desc">${p.description || 'Sin descripción disponible para este producto.'}</div><div class="product-detail-actions">${actionsHtml}</div></div></div>`;
     detailModal.classList.add('open');
     document.body.style.overflow = 'hidden';
 }
@@ -846,7 +850,7 @@ function renderAdminProducts() {
         const priceDisplay = isConsult ? '<span class="admin-badge-consult">Consultar</span>' : '$' + Number(p.price).toLocaleString('es-AR');
         const transferDisplay = (!isConsult && p.transfer_price) ? '$' + Number(p.transfer_price).toLocaleString('es-AR') : '—';
         const oldPriceDisplay = (!isConsult && p.old_price) ? '$' + Number(p.old_price).toLocaleString('es-AR') : '—';
-        return `<tr><td>${p.image_url ? `<img src="${p.image_url}" style="width:30px;height:30px;object-fit:cover;border-radius:4px">` : p.emoji || '📦'}</td><td><strong>${p.name}</strong></td><td>${getCatName(p.category_slug || p.category)}</td><td>${priceDisplay}</td><td>${transferDisplay}</td><td>${oldPriceDisplay}</td><td><select onchange="updateProductBadge('${p.id}', this.value)" class="admin-badge-select ${p.badge || ''}"><option value="">— Sin —</option><option value="new" ${p.badge === 'new' ? 'selected' : ''}>Nuevo</option><option value="offer" ${p.badge === 'offer' ? 'selected' : ''}>Oferta</option><option value="hot" ${p.badge === 'hot' ? 'selected' : ''}>Destacado</option></select></td><td><div class="crud-actions"><button class="btn-edit" onclick="openProductForm(allProds.find(x=>String(x.id)===String(${p.id})))">✏️</button><button class="btn-delete" onclick="deleteProduct(${p.id})">🗑️</button></div></td></tr>`;
+        return `<tr><td>${p.image_url ? `<img src="${p.image_url}" style="width:30px;height:30px;object-fit:cover;border-radius:4px">` : p.emoji || '📦'}</td><td><strong>${p.name}</strong></td><td>${getCatName(p.category_slug || p.category)}</td><td>${priceDisplay}</td><td>${transferDisplay}</td><td>${oldPriceDisplay}</td><td><select onchange="updateProductBadge('${p.id}', this.value); this.className = 'admin-badge-select ' + (this.value || '')" class="admin-badge-select ${p.badge || ''}"><option value="">— Sin —</option><option value="new" ${p.badge === 'new' ? 'selected' : ''}>Nuevo</option><option value="hot" ${p.badge === 'hot' ? 'selected' : ''}>Destacado</option></select></td><td><div class="crud-actions"><button class="btn-edit" onclick="openProductForm(allProds.find(x=>String(x.id)===String(${p.id})))">✏️</button><button class="btn-delete" onclick="deleteProduct(${p.id})">🗑️</button></div></td></tr>`;
     }).join('')}</tbody></table>`;
 }
 
@@ -886,7 +890,7 @@ function renderAdminFeatured() {
                 if (rawImg) {
                     imgTag = `<img src="${rawImg}" alt="${p.name}" style="width:100% !important;height:110px !important;max-height:110px !important;object-fit:cover !important;display:block !important;border-radius:3px">`;
                 }
-                const badgeText = p.badge === 'hot' ? '🔥 Destacado' : (p.badge === 'new' ? '✨ Nuevo' : (p.badge === 'offer' ? '🏷️ Oferta' : 'Sin badge'));
+                const badgeText = p.badge === 'hot' ? '🔥 Destacado' : (p.badge === 'new' ? '✨ Nuevo' : 'Sin badge');
 
                 return `
                 <div class="featured-admin-card" id="feat-item-${p.id}" style="background:var(--white);border:1px solid var(--pink-light);border-radius:6px;padding:0.7rem;display:flex;flex-direction:column;position:relative;box-shadow:0 2px 6px rgba(0,0,0,0.03)">
