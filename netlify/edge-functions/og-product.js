@@ -75,6 +75,11 @@ export default async function (request, context) {
 
     let html = await response.text();
 
+    // Clean up existing tags that might duplicate
+    html = html.replace(/<meta\s+property=["']og:image:secure_url["'][\s\S]*?>/gi, '');
+    html = html.replace(/<link\s+rel=["']image_src["'][\s\S]*?>/gi, '');
+    html = html.replace(/<meta\s+property=["']og:site_name["'][\s\S]*?>/gi, '');
+
     // Replace <title>
     html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`);
 
