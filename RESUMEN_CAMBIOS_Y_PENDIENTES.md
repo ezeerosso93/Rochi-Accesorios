@@ -1,6 +1,6 @@
 # Resumen de Cambios y Tareas Pendientes — Rochi Accesorios
 
-**Última actualización:** 4 de Octubre de 2026  
+**Última actualización:** 5 de Octubre de 2026  
 **Objetivos clave recientes:** 
 1. **Notificaciones instantáneas por WhatsApp (CallMeBot):** Envío automático de alertas con el detalle de cada pedido al teléfono `+5492964495799`.
 2. **Eliminación de pedidos en Admin:** Botón `🗑️` en la tabla de pedidos con confirmación, validación de filas eliminadas y actualización en tiempo real de estadísticas.
@@ -131,6 +131,10 @@ Para probar la tienda localmente en tu computadora:
   - Cada producto tiene su URL directa limpia (`?p=ID`) que abre la ficha automáticamente.
   - El nombre de cada producto es un enlace semántico `<a>` (`clic derecho > Copiar dirección de enlace`).
   - Botón rápido `🔗` en cada tarjeta y botón *"Compartir Producto"* dentro del modal (utiliza la ventana nativa de compartir en celulares o copia al portapapeles en PC).
+* **Vista previa con foto, título y precio en WhatsApp y Redes Sociales:**
+  - Creada **Netlify Edge Function** (`netlify/edge-functions/og-product.js` y `netlify.toml`).
+  - Cuando se comparte un link como `https://rochi.com.ar/?p=50`, la Edge Function consulta Supabase en milisegundos e inyecta dinámicamente la imagen real del producto (`og:image`), el nombre (`og:title`) y el precio/descripción (`og:description`).
+  - Agregadas etiquetas Open Graph base en `index.html` para la tienda principal (logo e información de marca).
 
 ---
 
@@ -139,7 +143,7 @@ Para probar la tienda localmente en tu computadora:
 Para publicar todos los cambios en la tienda online en vivo:
 ```bash
 git add .
-git commit -m "Agregar links compartibles de productos y destacados primero en catalogo"
+git commit -m "Configurar Netlify Edge Function para vista previa con foto de productos en WhatsApp"
 git push origin main
 ```
-*Netlify actualizará el sitio en vivo de forma automática en aproximadamente 1 minuto.*
+*Netlify compilará la Edge Function y actualizará el sitio en vivo de forma automática en aproximadamente 1 minuto.*

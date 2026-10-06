@@ -1,0 +1,9 @@
+# Configuración de Netlify para Rochi Accesorios
+
+[build]
+  publish = "."
+
+# Función en el borde para previsualización dinámica de fotos de productos en WhatsApp, Instagram, Facebook, etc.
+[[edge_functions]]
+  function = "og-product"
+  path = "/*"
