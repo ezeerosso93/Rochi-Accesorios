@@ -79,9 +79,9 @@ export default async function (request, context) {
     html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`);
 
     // Replace existing meta tags
-    html = html.replace(/<meta\s+property=["']og:title["'][\s\S]*?>/gi, `<meta property="og:title" content="${title}">`);
+    html = html.replace(/<meta\s+property=["']og:title["'][\s\S]*?>/gi, `<meta property="og:title" content="${title}">\n  <meta property="og:site_name" content="Rochi Accesorios">`);
     html = html.replace(/<meta\s+property=["']og:description["'][\s\S]*?>/gi, `<meta property="og:description" content="${description}">`);
-    html = html.replace(/<meta\s+property=["']og:image["'][\s\S]*?>/gi, `<meta property="og:image" content="${imageUrl}">`);
+    html = html.replace(/<meta\s+property=["']og:image["'][\s\S]*?>/gi, `<meta property="og:image" content="${imageUrl}">\n  <meta property="og:image:secure_url" content="${imageUrl}">\n  <link rel="image_src" href="${imageUrl}">`);
     html = html.replace(/<meta\s+property=["']og:url["'][\s\S]*?>/gi, `<meta property="og:url" content="${productUrl}">`);
 
     html = html.replace(/<meta\s+name=["']twitter:title["'][\s\S]*?>/gi, `<meta name="twitter:title" content="${title}">`);
